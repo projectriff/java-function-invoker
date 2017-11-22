@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
 
-import java.util.Collections;
-
-import io.sk8s.invoker.java.function.Doubler;
+import io.projectriff.functions.Doubler;
+import io.projectriff.functions.FunctionApp;
+import io.projectriff.invoker.ApplicationRunner;
 
 import org.junit.Test;
 
@@ -26,16 +26,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
- *
  */
-public class ContextRunnerTests {
+public class ApplicationRunnerTests {
 
 	@Test
 	public void startEvaluateAndStop() {
-		ContextRunner runner = new ContextRunner();
-		runner.run(Doubler.class.getName(), Collections.emptyMap(), "--spring.main.webEnvironment=false");
-		assertThat(runner.getContext()).isNotNull();
+		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(), FunctionApp.class.getName());
+		runner.run("--spring.main.webEnvironment=false");
+		assertThat(runner.containsBean(Doubler.class.getName())).isTrue();
+		assertThat(runner.getBean(Doubler.class.getName())).isNotNull();
 		runner.close();
 	}
-
 }

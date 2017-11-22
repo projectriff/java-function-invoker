@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -35,5 +35,4 @@ public class JavaFunctionInvokerController {
 	public String invoke() {
 		return "forward:/" + functions.getFunctionName();
 	}
-
 }

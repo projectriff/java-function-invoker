@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

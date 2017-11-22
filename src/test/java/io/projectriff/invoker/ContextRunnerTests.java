@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.invoker;
 
-import java.util.function.Function;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import reactor.core.publisher.Flux;
+import java.util.Collections;
 
-public class FluxDoubler implements Function<Flux<Integer>, Flux<Integer>> {
-	@Override
-	public Flux<Integer> apply(Flux<Integer> integer) {
-		return integer.map(i -> 2*i);
+import org.junit.Test;
+
+import io.projectriff.functions.Doubler;
+
+/**
+ * @author Dave Syer
+ */
+public class ContextRunnerTests {
+
+	@Test
+	public void startEvaluateAndStop() {
+		ContextRunner runner = new ContextRunner();
+		runner.run(Doubler.class.getName(), Collections.emptyMap(), "--spring.main.webEnvironment=false");
+		assertThat(runner.getContext()).isNotNull();
+		runner.close();
 	}
 }

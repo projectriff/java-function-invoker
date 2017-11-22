@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.functions;
 
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
-public class NumberEmitter implements Supplier<Integer> {
+public class Printer implements Consumer<Object> {
+
 	@Override
-	public Integer get() {
-		return 1;
+	public void accept(Object o) {
+		System.err.println("Seen " + o);
 	}
 }

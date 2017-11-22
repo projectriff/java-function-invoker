@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.invoker;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.sk8s.invoker.java.server.FunctionConfiguration;
-import io.sk8s.invoker.java.server.FunctionProperties;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,10 +37,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { FunctionConfiguration.class, FunctionProperties.class,
 		InMemoryFunctionCatalog.class })
@@ -47,7 +44,7 @@ import static org.junit.Assert.assertThat;
 public abstract class FunctionConfigurationTests {
 
 	@TestPropertySource(properties = {
-			"function.uri=file:target/test-classes?handler=io.sk8s.invoker.java.function.Doubler" })
+			"function.uri=file:target/test-classes?handler=io.projectriff.functions.Doubler" })
 	public static class SingleFunctionTests extends FunctionConfigurationTests {
 
 		@Autowired
@@ -61,8 +58,8 @@ public abstract class FunctionConfigurationTests {
 	}
 
 	@TestPropertySource(properties = { "function.uri=file:target/test-classes?handler="
-			+ "io.sk8s.invoker.java.function.NumberEmitter,"
-			+ "io.sk8s.invoker.java.function.Frenchizer" })
+			+ "io.projectriff.functions.NumberEmitter,"
+			+ "io.projectriff.functions.Frenchizer" })
 	public static class SupplierCompositionTests extends FunctionConfigurationTests {
 
 		@Autowired
@@ -83,8 +80,8 @@ public abstract class FunctionConfigurationTests {
 	}
 
 	@TestPropertySource(properties = { "function.uri=file:target/test-classes?handler="
-			+ "io.sk8s.invoker.java.function.Doubler,"
-			+ "io.sk8s.invoker.java.function.Frenchizer" })
+			+ "io.projectriff.functions.Doubler,"
+			+ "io.projectriff.functions.Frenchizer" })
 	public static class FunctionCompositionTests extends FunctionConfigurationTests {
 
 		@Autowired
@@ -104,8 +101,8 @@ public abstract class FunctionConfigurationTests {
 	}
 
 	@TestPropertySource(properties = { "function.uri=file:target/test-classes?handler="
-			+ "io.sk8s.invoker.java.function.Frenchizer,"
-			+ "io.sk8s.invoker.java.function.Printer" })
+			+ "io.projectriff.functions.Frenchizer,"
+			+ "io.projectriff.functions.Printer" })
 	public static class ConsumerCompositionTests extends FunctionConfigurationTests {
 
 		@Rule
@@ -121,5 +118,4 @@ public abstract class FunctionConfigurationTests {
 			capture.expect(containsString("Seen 2"));
 		}
 	}
-
 }

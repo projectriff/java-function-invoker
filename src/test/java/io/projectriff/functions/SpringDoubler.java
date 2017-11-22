@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.functions;
 
 import java.util.function.Function;
 
@@ -50,5 +50,4 @@ public class SpringDoubler implements Function<Integer, Integer> {
 	public Integer apply(Integer integer) {
 		return 2 * integer;
 	}
-
 }

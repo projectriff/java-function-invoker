@@ -14,14 +14,29 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.functions;
 
-import java.util.function.Consumer;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
-public class Printer implements Consumer<Object> {
+/**
+ * @author Dave Syer
+ */
+@SpringBootApplication
+public class FunctionApp {
+	
+	@Bean
+	public Doubler myDoubler() {
+		return new Doubler();
+	}
 
-	@Override
-	public void accept(Object o) {
-		System.err.println("Seen " + o);
+	@Bean
+	public Frenchizer myFrenchizer() {
+		return new Frenchizer();
+	}
+
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(FunctionApp.class, args);
 	}
 }

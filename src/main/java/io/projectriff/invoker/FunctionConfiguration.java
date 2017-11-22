@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -104,7 +104,6 @@ public class FunctionConfiguration {
 	 * {@link FunctionProperties}. They are named sequentially "function0", "function1",
 	 * etc. The instances are created in an isolated class loader, so the jar they are
 	 * packed in has to define all the dependencies (except core JDK).
-	 * 
 	 */
 	@PostConstruct
 	public void init() {
@@ -155,7 +154,6 @@ public class FunctionConfiguration {
 	 * functions. Creates a single application context if <code>run()</code> is called
 	 * with a non-null main class, and then uses it to lookup functions (by name and then
 	 * by type).
-	 *
 	 */
 	private class BeanCreator {
 

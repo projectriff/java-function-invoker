@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
 
@@ -33,8 +35,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * @author Mark Fisher
  */
@@ -42,8 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 @TestPropertySource(properties = "function.uri=file:target/test-classes"
-		+ "?handler=io.sk8s.invoker.java.function.Doubler,io.sk8s.invoker.java.function.Frenchizer")
-public class ComposedJavaFunctionInvokerApplicationTests {
+		+ "?handler=io.projectriff.functions.Doubler")
+public abstract class JavaFunctionInvokerApplicationTests {
 
 	@Autowired
 	private TestRestTemplate rest;
@@ -51,9 +51,8 @@ public class ComposedJavaFunctionInvokerApplicationTests {
 	@Test
 	public void contextLoads() throws Exception {
 		ResponseEntity<String> result = rest.exchange(RequestEntity.post(new URI("/"))
-				.contentType(MediaType.TEXT_PLAIN).body("2"), String.class);
+				.contentType(MediaType.TEXT_PLAIN).body("5"), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("quatre");
+		assertThat(result.getBody()).isEqualTo("10");
 	}
-
 }

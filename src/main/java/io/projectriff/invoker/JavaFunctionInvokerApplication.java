@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
 
 import java.io.File;
 import java.net.URL;
@@ -32,6 +32,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Mark Fisher
+ * @author Dave Syer
  */
 @SpringBootApplication
 public class JavaFunctionInvokerApplication {
@@ -127,5 +128,4 @@ public class JavaFunctionInvokerApplication {
 		}
 		return null;
 	}
-
 }

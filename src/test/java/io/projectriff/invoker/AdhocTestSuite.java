@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java;
-
-import io.sk8s.invoker.java.server.ApplicationRunnerTests;
-import io.sk8s.invoker.java.server.ComposedJavaFunctionInvokerApplicationTests;
-import io.sk8s.invoker.java.server.ContextRunnerTests;
-import io.sk8s.invoker.java.server.IsolatedTests;
+package io.projectriff.invoker;
 
 import org.junit.Ignore;
 import org.junit.runner.RunWith;

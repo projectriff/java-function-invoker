@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.function;
+package io.projectriff.functions;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
-public class Doubler implements Function<Integer, Integer> {
+public class NumberEmitter implements Supplier<Integer> {
 	@Override
-	public Integer apply(Integer integer) {
-		return 2 * integer;
+	public Integer get() {
+		return 1;
 	}
 }

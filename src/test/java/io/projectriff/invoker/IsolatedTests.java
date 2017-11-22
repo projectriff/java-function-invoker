@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package io.sk8s.invoker.java.server;
+package io.projectriff.invoker;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
 
@@ -33,11 +35,8 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.SocketUtils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * @author Dave Syer
- *
  */
 public class IsolatedTests {
 
@@ -66,13 +65,13 @@ public class IsolatedTests {
 		expected.expect(BeanCreationException.class);
 		SpringApplication.run(JavaFunctionInvokerApplication.class,
 				"--server.port=" + port, "--function.uri=file:target/test-classes"
-						+ "?handler=io.sk8s.invoker.java.function.FluxDoubler");
+						+ "?handler=io.projectriff.functions.FluxDoubler");
 	}
 
 	@Test
 	public void fluxFunction() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
-				+ "?handler=io.sk8s.invoker.java.function.FluxDoubler");
+				+ "?handler=io.projectriff.functions.FluxDoubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -81,14 +80,14 @@ public class IsolatedTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 		// Check single valued response in s-c-f
 		assertThat(result.getBody()).isEqualTo("[10]");
-		assertThat(runner.containsBean("io.sk8s.invoker.java.function.FluxDoubler"))
+		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler"))
 				.isFalse();
 	}
 
 	@Test
 	public void simpleFunction() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
-				+ "?handler=io.sk8s.invoker.java.function.Doubler");
+				+ "?handler=io.projectriff.functions.Doubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -101,7 +100,7 @@ public class IsolatedTests {
 	@Test
 	public void appClassPath() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
-				+ "handler=io.sk8s.invoker.java.function.SpringDoubler");
+				+ "handler=io.projectriff.functions.SpringDoubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -115,7 +114,7 @@ public class IsolatedTests {
 	public void mainClassBeanName() throws Exception {
 		runner.run("--server.port=" + port,
 				"--function.uri=app:classpath?" + "handler=myDoubler&"
-						+ "main=io.sk8s.invoker.java.function.FunctionApp");
+						+ "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -129,8 +128,8 @@ public class IsolatedTests {
 	public void mainClassBeanType() throws Exception {
 		runner.run("--server.port=" + port,
 				"--function.uri=app:classpath?"
-						+ "handler=io.sk8s.invoker.java.function.Doubler&"
-						+ "main=io.sk8s.invoker.java.function.FunctionApp");
+						+ "handler=io.projectriff.functions.Doubler&"
+						+ "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
