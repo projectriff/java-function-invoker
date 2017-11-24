@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -38,21 +40,44 @@ import org.springframework.util.StringUtils;
 public class JavaFunctionInvokerApplication {
 
 	private static Log logger = LogFactory.getLog(JavaFunctionInvokerApplication.class);
+	private ApplicationRunner runner;
+	private URLClassLoader classLoader;
 
 	public static void main(String[] args) {
 		JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
 		if (application.isolated(args)) {
-			application.runner().run(args);
+			application.run(args);
 		}
 		else {
 			SpringApplication.run(JavaFunctionInvokerApplication.class, args);
 		}
 	}
 
-	ApplicationRunner runner() {
-		ApplicationRunner runner = new ApplicationRunner(createClassLoader(),
-				JavaFunctionInvokerApplication.class.getName());
-		return runner;
+	public void run(String... args) {
+		runner().run(args);
+	}
+
+	@PreDestroy
+	public void close() throws Exception {
+		if (this.runner != null) {
+			this.runner.close();
+		}
+		if (this.classLoader != null) {
+			this.classLoader.close();
+		}
+	}
+
+	private ApplicationRunner runner() {
+		if (this.runner == null) {
+			synchronized (this) {
+				if (this.runner == null) {
+					this.classLoader = createClassLoader();
+					this.runner = new ApplicationRunner(this.classLoader,
+							JavaFunctionInvokerApplication.class.getName());
+				}
+			}
+		}
+		return this.runner;
 	}
 
 	private boolean isolated(String[] args) {
@@ -89,8 +114,8 @@ public class JavaFunctionInvokerApplication {
 				child.remove(url);
 			}
 		}
-		logger.info("Parent: " + parent);
-		logger.info("Child: " + child);
+		logger.debug("Parent: " + parent);
+		logger.debug("Child: " + child);
 		if (!parent.isEmpty()) {
 			base = new URLClassLoader(parent.toArray(new URL[0]), base.getParent());
 		}

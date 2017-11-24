@@ -84,6 +84,8 @@ public class FunctionConfiguration {
 
 	private BeanCreatorClassLoader functionClassLoader;
 
+	private BeanCreator creator;
+
 	@Bean
 	@ConfigurationProperties("maven")
 	public MavenProperties mavenProperties() {
@@ -111,10 +113,10 @@ public class FunctionConfiguration {
 				.flatMap(toResourceURL(delegatingResourceLoader)).toArray(URL[]::new);
 
 		try {
-			BeanCreator creator = new BeanCreator(urls);
-			creator.run(properties.getMainClassName());
-			Arrays.stream(properties.getClassName()).map(creator::create).sequential()
-					.forEach(creator::register);
+			this.creator = new BeanCreator(urls);
+			this.creator.run(properties.getMainClassName());
+			Arrays.stream(properties.getClassName()).map(this.creator::create)
+					.sequential().forEach(this.creator::register);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot create functions", e);
@@ -130,6 +132,9 @@ public class FunctionConfiguration {
 			catch (IOException e) {
 				throw new IllegalStateException("Cannot close function class loader", e);
 			}
+		}
+		if (this.creator != null) {
+			this.creator.close();
 		}
 	}
 
@@ -218,6 +223,12 @@ public class FunctionConfiguration {
 		public void register(Object bean) {
 			registry.register(new FunctionRegistration<Object>(bean)
 					.names("function" + counter.getAndIncrement()));
+		}
+
+		public void close() {
+			if (this.runner != null) {
+				this.runner.close();
+			}
 		}
 
 	}

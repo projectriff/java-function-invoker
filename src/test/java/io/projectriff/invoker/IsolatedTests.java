@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
 
 /**
@@ -42,19 +43,19 @@ public class IsolatedTests {
 
 	private TestRestTemplate rest;
 	private int port = SocketUtils.findAvailableTcpPort();
-	private ApplicationRunner runner;
 
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
+	private JavaFunctionInvokerApplication runner;
 
 	@Before
 	public void init() {
-		runner = new JavaFunctionInvokerApplication().runner();
+		runner = new JavaFunctionInvokerApplication();
 		rest = new TestRestTemplate();
 	}
 
 	@After
-	public void close() {
+	public void close() throws Exception {
 		if (runner != null) {
 			runner.close();
 		}
@@ -80,8 +81,9 @@ public class IsolatedTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 		// Check single valued response in s-c-f
 		assertThat(result.getBody()).isEqualTo("[10]");
-		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler"))
-				.isFalse();
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
+				.getField(this.runner, "runner");
+		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler")).isFalse();
 	}
 
 	@Test
@@ -112,9 +114,8 @@ public class IsolatedTests {
 
 	@Test
 	public void mainClassBeanName() throws Exception {
-		runner.run("--server.port=" + port,
-				"--function.uri=app:classpath?" + "handler=myDoubler&"
-						+ "main=io.projectriff.functions.FunctionApp");
+		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
+				+ "handler=myDoubler&" + "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
