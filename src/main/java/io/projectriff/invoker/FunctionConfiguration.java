@@ -82,7 +82,7 @@ public class FunctionConfiguration {
 	@Autowired
 	private ConfigurableApplicationContext context;
 
-	private URLClassLoader functionClassLoader;
+	private BeanCreatorClassLoader functionClassLoader;
 
 	@Bean
 	@ConfigurationProperties("maven")
