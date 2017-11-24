@@ -186,6 +186,7 @@ public class FunctionConfiguration {
 							main);
 					// TODO: make the runtime properties configurable
 					runner.run("--spring.main.webEnvironment=false",
+							"--spring.cloud.stream.enabled=false",
 							"--spring.main.bannerMode=OFF",
 							"--spring.main.webApplicationType=none");
 					this.runner = runner;

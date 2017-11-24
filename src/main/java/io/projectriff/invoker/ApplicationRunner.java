@@ -16,7 +16,7 @@
 
 package io.projectriff.invoker;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,9 +60,7 @@ public class ApplicationRunner {
 			ClassUtils.overrideThreadContextClassLoader(this.classLoader);
 			Class<?> cls = this.classLoader.loadClass(ContextRunner.class.getName());
 			this.app = new StandardEvaluationContext(cls.newInstance());
-			runContext(this.source,
-					Collections.singletonMap(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME,
-							"function-invoker-" + UUID.randomUUID()),
+			runContext(this.source, defaultProperties(UUID.randomUUID().toString()),
 					args);
 		}
 		catch (Exception e) {
@@ -75,6 +73,13 @@ public class ApplicationRunner {
 		if (e != null) {
 			throw e;
 		}
+	}
+
+	private Map<String, String> defaultProperties(String id) {
+		Map<String, String> map = new HashMap<>();
+		map.put(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME, "function-invoker-" + id);
+		map.put("spring.jmx.default-domain", "function-invoker-" + id);
+		return map;
 	}
 
 	public Object getBean(String name) {
