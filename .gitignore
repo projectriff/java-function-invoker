@@ -5,3 +5,5 @@
 .springBeans
 target
 
+.idea/
+*.iml
