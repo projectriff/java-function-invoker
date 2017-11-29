@@ -17,9 +17,11 @@
 package io.projectriff.invoker;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.jar.JarFile;
 
@@ -90,13 +92,7 @@ public class JavaFunctionInvokerApplication {
 	}
 
 	private URLClassLoader createClassLoader() {
-		ClassLoader base = getClass().getClassLoader();
-		if (!(base instanceof URLClassLoader)) {
-			throw new IllegalStateException("Need a URL class loader, found: " + base);
-		}
-		@SuppressWarnings("resource")
-		URLClassLoader urlClassLoader = (URLClassLoader) base;
-		URL[] urls = urlClassLoader.getURLs();
+		URL[] urls = findClassPath();
 		if (urls.length == 1) {
 			URL[] classpath = extractClasspath(urls[0]);
 			if (classpath != null) {
@@ -116,10 +112,42 @@ public class JavaFunctionInvokerApplication {
 		}
 		logger.debug("Parent: " + parent);
 		logger.debug("Child: " + child);
+		ClassLoader base = getClass().getClassLoader();
 		if (!parent.isEmpty()) {
 			base = new URLClassLoader(parent.toArray(new URL[0]), base.getParent());
 		}
 		return new URLClassLoader(child.toArray(new URL[0]), base);
+	}
+
+	private URL[] findClassPath() {
+		ClassLoader base = getClass().getClassLoader();
+		if (!(base instanceof URLClassLoader)) {
+			try {
+				// Guess the classpath, based on where we can resolve existing resources
+				List<URL> list = Collections
+						.list(getClass().getClassLoader().getResources("META-INF"));
+				List<URL> result = new ArrayList<>();
+				result.add(
+						getClass().getProtectionDomain().getCodeSource().getLocation());
+				for (URL url : list) {
+					String path = url.toString();
+					path = path.substring(0, path.length() - "/META-INF".length());
+					if (path.endsWith("!")) {
+						path = path + "/";
+					}
+					result.add(new URL(path));
+				}
+				return result.toArray(new URL[result.size()]);
+			}
+			catch (IOException e) {
+				throw new IllegalStateException("Cannot find class path", e);
+			}
+		}
+		else {
+			@SuppressWarnings("resource")
+			URLClassLoader urlClassLoader = (URLClassLoader) base;
+			return urlClassLoader.getURLs();
+		}
 	}
 
 	private boolean isRoot(String file) {
