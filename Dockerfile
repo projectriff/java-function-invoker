@@ -1,4 +1,4 @@
-FROM java:8-alpine
+FROM openjdk:8-alpine
 VOLUME /tmp
 COPY target/dependency/BOOT-INF/lib /app/lib
 COPY target/dependency/META-INF /app/META-INF
