@@ -79,6 +79,7 @@ public class ApplicationRunner {
 		Map<String, String> map = new HashMap<>();
 		map.put(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME, "function-invoker-" + id);
 		map.put("spring.jmx.default-domain", "function-invoker-" + id);
+		map.put("spring.jmx.enabled", "false");
 		return map;
 	}
 
