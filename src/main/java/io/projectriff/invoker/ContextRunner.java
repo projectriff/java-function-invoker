@@ -52,7 +52,7 @@ public class ContextRunner {
 					environment.getPropertySources().addAfter(
 							StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 							new MapPropertySource("appDeployer", properties));
-					context = new SpringApplicationBuilder(source)
+					context = new SpringApplicationBuilder(source).listeners(new BeanCountingApplicationListener())
 							.environment(environment).run(args);
 				}
 				catch (Throwable ex) {
