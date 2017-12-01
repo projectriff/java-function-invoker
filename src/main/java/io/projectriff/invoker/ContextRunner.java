@@ -24,6 +24,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -36,7 +37,7 @@ public class ContextRunner {
 
 	private ConfigurableApplicationContext context;
 	private Thread runThread;
-	private boolean running = false;
+	private volatile boolean running = false;
 	private Throwable error;
 	private long timeout = 120000;
 
@@ -52,8 +53,10 @@ public class ContextRunner {
 					environment.getPropertySources().addAfter(
 							StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 							new MapPropertySource("appDeployer", properties));
+					running = true;
 					context = new SpringApplicationBuilder(source).listeners(new BeanCountingApplicationListener())
-							.environment(environment).run(args);
+							.environment(environment).registerShutdownHook(false)
+							.run(args);
 				}
 				catch (Throwable ex) {
 					error = ex;
@@ -80,6 +83,7 @@ public class ContextRunner {
 		}
 		// TODO: JDBC leak protection?
 		this.running = false;
+		this.runThread.setContextClassLoader(null);
 		this.runThread = null;
 	}
 
@@ -88,10 +92,19 @@ public class ContextRunner {
 	}
 
 	private void resetUrlHandler() {
-		// Tomcat always tries to set this, even if it was already set
-		Field field = ReflectionUtils.findField(URL.class, "factory");
+		if (ClassUtils.isPresent(
+				"org.apache.catalina.webresources.TomcatURLStreamHandlerFactory", null)) {
+			setField(ClassUtils.resolveClassName(
+					"org.apache.catalina.webresources.TomcatURLStreamHandlerFactory",
+					null), "instance", null);
+			setField(URL.class, "factory", null);
+		}
+	}
+
+	private void setField(Class<?> type, String name, Object value) {
+		Field field = ReflectionUtils.findField(type, name);
 		ReflectionUtils.makeAccessible(field);
-		ReflectionUtils.setField(field, null, null);
+		ReflectionUtils.setField(field, null, value);
 	}
 
 	public boolean isRunning() {
