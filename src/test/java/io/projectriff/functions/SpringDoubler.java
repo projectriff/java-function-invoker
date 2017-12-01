@@ -34,7 +34,7 @@ public class SpringDoubler implements Function<Integer, Integer> {
 	@PostConstruct
 	public void init() {
 		if (this.context == null) {
-			context = new SpringApplicationBuilder(FunctionApp.class).bannerMode(Mode.OFF)
+			context = new SpringApplicationBuilder(FunctionApp.class).bannerMode(Mode.OFF).registerShutdownHook(false)
 					.web(false).run();
 		}
 	}
