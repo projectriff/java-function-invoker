@@ -125,16 +125,18 @@ public class FunctionConfiguration {
 
 	@PreDestroy
 	public void close() {
+		if (this.creator != null) {
+			this.creator.close();
+		}
 		if (this.functionClassLoader != null) {
 			try {
 				this.functionClassLoader.close();
+				this.functionClassLoader = null;
+				Runtime.getRuntime().gc();
 			}
 			catch (IOException e) {
 				throw new IllegalStateException("Cannot close function class loader", e);
 			}
-		}
-		if (this.creator != null) {
-			this.creator.close();
 		}
 	}
 
@@ -189,9 +191,7 @@ public class FunctionConfiguration {
 					this.runner = runner;
 				}
 				finally {
-					if (contextClassLoader != null) {
-						ClassUtils.overrideThreadContextClassLoader(contextClassLoader);
-					}
+					ClassUtils.overrideThreadContextClassLoader(contextClassLoader);
 				}
 			}
 			else {
@@ -214,9 +214,7 @@ public class FunctionConfiguration {
 						ClassUtils.resolveClassName(type, functionClassLoader));
 			}
 			finally {
-				if (contextClassLoader != null) {
-					ClassUtils.overrideThreadContextClassLoader(contextClassLoader);
-				}
+				ClassUtils.overrideThreadContextClassLoader(contextClassLoader);
 			}
 		}
 
