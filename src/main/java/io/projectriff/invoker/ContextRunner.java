@@ -54,7 +54,8 @@ public class ContextRunner {
 							StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 							new MapPropertySource("appDeployer", properties));
 					running = true;
-					context = new SpringApplicationBuilder(source).listeners(new BeanCountingApplicationListener())
+					context = new SpringApplicationBuilder(source)
+							.listeners(new BeanCountingApplicationListener())
 							.environment(environment).registerShutdownHook(false)
 							.run(args);
 				}

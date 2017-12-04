@@ -16,18 +16,26 @@
 package io.projectriff.invoker;
 
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * @author Dave Syer
@@ -36,6 +44,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class BeanCountingApplicationListener
 		implements ApplicationListener<ApplicationReadyEvent>, ApplicationContextAware {
 
+	public static final String MARKER = "Invoker app started";
 	private static Log logger = LogFactory.getLog(BeanCountingApplicationListener.class);
 	private ApplicationContext context;
 
@@ -67,6 +76,43 @@ public class BeanCountingApplicationListener
 		}
 		catch (Exception e) {
 		}
+		if (isSpringBootApplication(sources(event))) {
+			try {
+				logger.info(MARKER);
+			}
+			catch (Exception e) {
+			}
+		}
+	}
+
+	private boolean isSpringBootApplication(Set<Class<?>> sources) {
+		for (Class<?> source : sources) {
+			if (AnnotatedElementUtils.hasAnnotation(source,
+					SpringBootConfiguration.class)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Set<Class<?>> sources(ApplicationReadyEvent event) {
+		Method method = ReflectionUtils.findMethod(SpringApplication.class,
+				"getAllSources");
+		if (method == null) {
+			method = ReflectionUtils.findMethod(SpringApplication.class, "getSources");
+		}
+		ReflectionUtils.makeAccessible(method);
+		@SuppressWarnings("unchecked")
+		Set<Object> objects = (Set<Object>) ReflectionUtils.invokeMethod(method,
+				event.getSpringApplication());
+		Set<Class<?>> result = new LinkedHashSet<>();
+		for (Object object : objects) {
+			if (object instanceof String) {
+				object = ClassUtils.resolveClassName((String) object, null);
+			}
+			result.add((Class<?>) object);
+		}
+		return result;
 	}
 
 }
