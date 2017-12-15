@@ -5,7 +5,7 @@
 
 	<groupId>io.projectriff</groupId>
 	<artifactId>java-function-invoker</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3-snapshot</version>
 	<packaging>jar</packaging>
 
 	<parent>
