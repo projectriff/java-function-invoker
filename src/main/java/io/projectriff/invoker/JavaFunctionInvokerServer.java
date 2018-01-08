@@ -110,7 +110,7 @@ public class JavaFunctionInvokerServer
 			return mapper.writeValueAsBytes(payload);
 		}
 		catch (Exception e) {
-			throw new IllegalStateException("Cannot convert to " + outputType, e);
+			throw new IllegalStateException("Cannot convert from " + outputType, e);
 		}
 	}
 
@@ -130,7 +130,7 @@ public class JavaFunctionInvokerServer
 			return mapper.readValue(payload, inputType);
 		}
 		catch (Exception e) {
-			throw new IllegalStateException("Cannot convert from " + inputType, e);
+			throw new IllegalStateException("Cannot convert to " + inputType, e);
 		}
 	}
 }

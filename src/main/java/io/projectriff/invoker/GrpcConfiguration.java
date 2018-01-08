@@ -49,7 +49,7 @@ public class GrpcConfiguration {
 
 	private static final Log logger = LogFactory.getLog(GrpcConfiguration.class);
 	private Server server;
-	private int port = 5555;
+	private int port = 10382;
 
 	@Autowired
 	private ObjectMapper mapper;
