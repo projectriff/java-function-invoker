@@ -45,14 +45,14 @@ public class JavaFunctionInvokerApplication {
 	private ApplicationRunner runner;
 	private URLClassLoader classLoader;
 
-	public static void main(String[] args) {
-		JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
-		if (application.isolated(args)) {
-			application.run(args);
+	public static void main(String[] args) throws IOException {
+		if (JavaFunctionInvokerApplication.isolated(args)) {
+			new JavaFunctionInvokerApplication().run(args);
 		}
 		else {
 			SpringApplication.run(JavaFunctionInvokerApplication.class, args);
 		}
+		System.in.read();
 	}
 
 	public void run(String... args) {
@@ -82,7 +82,7 @@ public class JavaFunctionInvokerApplication {
 		return this.runner;
 	}
 
-	private boolean isolated(String[] args) {
+	private static boolean isolated(String[] args) {
 		for (String arg : args) {
 			if (arg.equals("--function.runner.isolated=false")) {
 				return false;

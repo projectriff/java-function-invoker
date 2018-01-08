@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +42,6 @@ public class FunctionProperties {
 
 	private static Log logger = LogFactory.getLog(FunctionProperties.class);
 
-	@NotNull
 	private String uri;
 	private String[] jarLocation;
 	private String[] className;
@@ -74,12 +72,12 @@ public class FunctionProperties {
 			logger.info("initializing with uri: " + uri);
 			Matcher m = uriPattern.matcher(uri);
 			Assert.isTrue(m.matches(),
-				"expected format: <jarLocation>?handler=<className>[&main=<className>]");
+					"expected format: <jarLocation>?handler=<className>[&main=<className>]");
 
 			String jarLocation = m.group(1);
 			String className = m.group(2);
 			String rest = m.group(3);
-			if (rest!=null && rest.startsWith("main=")) {
+			if (rest != null && rest.startsWith("main=")) {
 				this.mainClassName = rest.substring("main=".length());
 			}
 

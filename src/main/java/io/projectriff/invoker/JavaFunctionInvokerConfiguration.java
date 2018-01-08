@@ -42,7 +42,7 @@ public class JavaFunctionInvokerConfiguration {
 	 * This departs from the standard converter that is automatically registered, which
 	 * requires that the target type is exactly String (but accepts all content types).
 	 * This is necessary here because the signature of
-	 * {@link JavaFunctionInvokerController#invoke(Object)} accepts {@literal Object}.
+	 * {@link JavaFunctionInvokerServer#invoke(Object)} accepts {@literal Object}.
 	 * </p>
 	 */
 	@Bean
