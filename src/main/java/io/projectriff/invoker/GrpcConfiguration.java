@@ -81,12 +81,9 @@ public class GrpcConfiguration {
 				.build();
 		this.server.start();
 		logger.info("Server started, listening on " + port);
-		Thread thread = new Thread(this::blockUntilShutdown);
-		thread.setDaemon(false);
-		thread.start();
 	}
 
-	private void blockUntilShutdown() {
+	public void awaitTermination() {
 		if (server != null) {
 			try {
 				server.awaitTermination();
@@ -106,7 +103,7 @@ public class GrpcConfiguration {
 		}
 		// This shouldn't be necessary, and doesn't seem to help anyway. How to stop the
 		// class loader from being destroyed before the server has stopped?
-		blockUntilShutdown();
+		awaitTermination();
 	}
 
 }

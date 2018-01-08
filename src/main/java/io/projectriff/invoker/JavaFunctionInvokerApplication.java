@@ -47,16 +47,24 @@ public class JavaFunctionInvokerApplication {
 
 	public static void main(String[] args) throws IOException {
 		if (JavaFunctionInvokerApplication.isolated(args)) {
-			new JavaFunctionInvokerApplication().run(args);
+			JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
+			application.run(args);
+			application.awaitTermination();
 		}
 		else {
-			SpringApplication.run(JavaFunctionInvokerApplication.class, args);
+			SpringApplication.run(JavaFunctionInvokerApplication.class, args)
+					.getBean(GrpcConfiguration.class).awaitTermination();
 		}
-		System.in.read();
 	}
 
 	public void run(String... args) {
 		runner().run(args);
+	}
+
+	private void awaitTermination() {
+		if (this.runner != null) {
+			this.runner.awaitTermination();
+		}
 	}
 
 	@PreDestroy
