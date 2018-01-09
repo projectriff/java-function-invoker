@@ -65,7 +65,7 @@ import org.springframework.util.StreamUtils;
  * @author Dave Syer
  */
 @Configuration
-@EnableConfigurationProperties
+@EnableConfigurationProperties(FunctionProperties.class)
 public class FunctionConfiguration {
 
 	private static Log logger = LogFactory.getLog(FunctionConfiguration.class);
