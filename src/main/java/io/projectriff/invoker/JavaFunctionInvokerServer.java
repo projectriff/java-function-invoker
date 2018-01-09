@@ -21,7 +21,7 @@ import java.util.function.Function;
 import io.grpc.stub.StreamObserver;
 import io.projectriff.grpc.function.MessageFunctionGrpc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -40,11 +40,10 @@ public class JavaFunctionInvokerServer
 	private final Function<Flux<Message<?>>, Flux<Message<?>>> function;
 	private final Class<?> inputType;
 	private final Class<?> outputType;
-	private final ObjectMapper mapper;
+	private final Gson mapper;
 
-	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function,
-			ObjectMapper mapper, Class<?> inputType, Class<?> outputType,
-			boolean isMessage) {
+	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
+			Class<?> inputType, Class<?> outputType, boolean isMessage) {
 		this.mapper = mapper;
 		this.inputType = inputType;
 		this.outputType = outputType;
@@ -107,7 +106,7 @@ public class JavaFunctionInvokerServer
 			return payload.toString().getBytes();
 		}
 		try {
-			return mapper.writeValueAsBytes(payload);
+			return mapper.toJson(payload).getBytes();
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot convert from " + outputType, e);
@@ -127,7 +126,7 @@ public class JavaFunctionInvokerServer
 			return new String(payload);
 		}
 		try {
-			return mapper.readValue(payload, inputType);
+			return mapper.fromJson(new String(payload), inputType);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot convert to " + inputType, e);

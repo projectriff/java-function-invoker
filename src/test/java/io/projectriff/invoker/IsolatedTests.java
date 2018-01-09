@@ -77,6 +77,18 @@ public class IsolatedTests {
 	}
 
 	@Test
+	public void fluxJson() throws Exception {
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
+				+ "?handler=io.projectriff.functions.Greeter");
+		List<String> result = client.send("{\"value\":\"World\"}");
+		// Custom JSON serialization doesn't work across the class loader boundary
+		assertThat(result).contains("{\"value\":\"Hello World\"}");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
+				.getField(this.runner, "runner");
+		assertThat(runner.containsBean("io.projectriff.functions.Greeter")).isFalse();
+	}
+
+	@Test
 	public void simpleFunction() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
 				+ "?handler=io.projectriff.functions.Doubler");

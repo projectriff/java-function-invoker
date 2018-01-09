@@ -23,7 +23,7 @@ import javax.annotation.PreDestroy;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +52,7 @@ public class GrpcConfiguration {
 	private int port = 10382;
 
 	@Autowired
-	private ObjectMapper mapper;
+	private Gson mapper;
 	@Autowired
 	private FunctionProperties functions;
 	@Autowired
