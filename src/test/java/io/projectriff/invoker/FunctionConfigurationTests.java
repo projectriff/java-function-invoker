@@ -38,8 +38,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { FunctionConfiguration.class, FunctionProperties.class,
-		InMemoryFunctionCatalog.class })
+@SpringBootTest(classes = { FunctionConfiguration.class, InMemoryFunctionCatalog.class })
 @DirtiesContext
 public abstract class FunctionConfigurationTests {
 
