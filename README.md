@@ -2,7 +2,7 @@ Testing locally:
 
 ```
 $ ./mvnw install dockerfile:build
-$ docker run -ti -p 8080:8080 -v `pwd`/target/test-classes:/classes projectriff/java-function-invoker:0.0.3-snapshot --function.uri=file:classes?handler=io.projectriff.functions.Doubler
+$ docker run -ti -p 8080:8080 -v `pwd`/target/test-classes:/classes projectriff/java-function-invoker:0.0.3 --function.uri=file:classes?handler=io.projectriff.functions.Doubler
 ```
 
 Then
