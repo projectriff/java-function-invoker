@@ -1,0 +1,12 @@
+
+                ▄      ▄█▀▀██▄█▀▀██
+                ▄▄▄    ██  ▀▀██  ▀▀
+               ████ ▐█████████████
+              ▐█▀▀▀   ▐██    ██
+   █████▄▄▄▄  ▐█      ▐██    ██
+    ▐██   ██  ▐█      ▐██    ██
+    ▐██       ▐█     ▀▀▀▀▀  ▀▀▀▀▀
+    ▐██       ▐█
+   ▄███▄▄      
+
+${AnsiColor.GREEN}:: Powered by Spring Boot ::        ${AnsiStyle.FAINT}${AnsiColor.BLACK}${spring-boot.formatted-version}${AnsiStyle.NORMAL}
