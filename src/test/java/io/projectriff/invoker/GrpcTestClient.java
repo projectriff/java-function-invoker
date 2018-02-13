@@ -43,14 +43,10 @@ public class GrpcTestClient {
 	private final ManagedChannel channel;
 	private final MessageFunctionStub asyncStub;
 
-	/** Construct client for accessing RouteGuide server at {@code host:port}. */
 	public GrpcTestClient(String host, int port) {
 		this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(true));
 	}
 
-	/**
-	 * Construct client for accessing RouteGuide server using the existing channel.
-	 */
 	public GrpcTestClient(ManagedChannelBuilder<?> channelBuilder) {
 		channel = channelBuilder.build();
 		asyncStub = MessageFunctionGrpc.newStub(channel);
