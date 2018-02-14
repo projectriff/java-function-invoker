@@ -18,11 +18,13 @@ package io.projectriff.functions;
 
 import java.util.function.Function;
 
+import org.reactivestreams.Publisher;
+
 import reactor.core.publisher.Flux;
 
-public class FluxDoubler implements Function<Flux<Integer>, Flux<Integer>> {
+public class FluxDoubler implements Function<Publisher<Integer>, Publisher<Integer>> {
 	@Override
-	public Flux<Integer> apply(Flux<Integer> integer) {
-		return integer.map(i -> 2*i);
+	public Publisher<Integer> apply(Publisher<Integer> integer) {
+		return Flux.from(integer).map(i -> 2*i);
 	}
 }
