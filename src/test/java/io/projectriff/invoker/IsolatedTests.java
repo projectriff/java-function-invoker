@@ -16,9 +16,7 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.net.URI;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,30 +26,28 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
 public class IsolatedTests {
 
-	private TestRestTemplate rest;
 	private int port = SocketUtils.findAvailableTcpPort();
 
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 	private JavaFunctionInvokerApplication runner;
 
+	private GrpcTestClient client;
+
 	@Before
 	public void init() {
 		runner = new JavaFunctionInvokerApplication();
-		rest = new TestRestTemplate();
+		client = new GrpcTestClient("localhost", port);
 	}
 
 	@After
@@ -73,56 +69,47 @@ public class IsolatedTests {
 	public void fluxFunction() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
 				+ "?handler=io.projectriff.functions.FluxDoubler");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		// Check single valued response in s-c-f
-		assertThat(result.getBody()).isEqualTo("[10]");
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
 				.getField(this.runner, "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler")).isFalse();
 	}
 
 	@Test
+	public void fluxJson() throws Exception {
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
+				+ "?handler=io.projectriff.functions.Greeter");
+		List<String> result = client.send("{\"value\":\"World\"}");
+		// Custom JSON serialization doesn't work across the class loader boundary
+		assertThat(result).contains("{\"value\":\"Hello World\"}");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
+				.getField(this.runner, "runner");
+		assertThat(runner.containsBean("io.projectriff.functions.Greeter")).isFalse();
+	}
+
+	@Test
 	public void simpleFunction() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
 				+ "?handler=io.projectriff.functions.Doubler");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 	}
 
 	@Test
 	public void appClassPath() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
 				+ "handler=io.projectriff.functions.SpringDoubler");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 	}
 
 	@Test
 	public void mainClassBeanName() throws Exception {
 		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
 				+ "handler=myDoubler&" + "main=io.projectriff.functions.FunctionApp");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 	}
 
 	@Test
@@ -131,12 +118,7 @@ public class IsolatedTests {
 				"--function.uri=app:classpath?"
 						+ "handler=io.projectriff.functions.Doubler&"
 						+ "main=io.projectriff.functions.FunctionApp");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 	}
 }

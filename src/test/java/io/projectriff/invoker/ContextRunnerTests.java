@@ -16,13 +16,13 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Collections;
+
+import io.projectriff.functions.Doubler;
 
 import org.junit.Test;
 
-import io.projectriff.functions.Doubler;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -32,7 +32,7 @@ public class ContextRunnerTests {
 	@Test
 	public void startEvaluateAndStop() {
 		ContextRunner runner = new ContextRunner();
-		runner.run(Doubler.class.getName(), Collections.emptyMap(), "--spring.main.webEnvironment=false");
+		runner.run(Doubler.class.getName(), Collections.emptyMap());
 		assertThat(runner.getContext()).isNotNull();
 		runner.close();
 	}

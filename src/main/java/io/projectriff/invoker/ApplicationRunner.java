@@ -163,4 +163,16 @@ public class ApplicationRunner {
 			this.app = null;
 		}
 	}
+
+	public void awaitTermination() {
+		if (this.app != null) {
+			String name = "grpcConfiguration";
+			if (!containsBean(name)) {
+				return;
+			}
+			Expression parsed = new SpelExpressionParser().parseExpression(
+					"context.getBean('" + name + "').awaitTermination()");
+			parsed.getValue(this.app);
+		}
+	}
 }

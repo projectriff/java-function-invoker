@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.projectriff.functions;
 
-package io.projectriff.invoker;
+import com.google.gson.Gson;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Eric Bottard
- * @author Mark Fisher
  * @author Dave Syer
+ *
  */
-@Controller
-public class JavaFunctionInvokerController {
+public class JsonTests {
 
-	@Autowired
-	private FunctionProperties functions;
-
-	@PostMapping("/")
-	public String invoke() {
-		return "forward:/" + functions.getFunctionName();
+	@Test
+	public void barHasCustomJson() throws Exception {
+		assertThat(new Gson().toJson(new Bar("foo"))).isEqualTo("{\"value\":\"foo\"}");
 	}
+
+	@Test
+	public void fooIsDefault() throws Exception {
+		assertThat(new Gson().toJson(new Foo("foo"))).isEqualTo("{\"value\":\"foo\"}");
+	}
+
 }

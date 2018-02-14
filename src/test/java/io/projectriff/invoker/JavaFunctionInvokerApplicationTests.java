@@ -16,43 +16,36 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.net.URI;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Mark Fisher
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @DirtiesContext
 @TestPropertySource(properties = "function.uri=file:target/test-classes"
 		+ "?handler=io.projectriff.functions.Doubler")
 public abstract class JavaFunctionInvokerApplicationTests {
 
 	@Autowired
-	private TestRestTemplate rest;
+	private GrpcConfiguration server;
 
 	@Test
 	public void contextLoads() throws Exception {
-		ResponseEntity<String> result = rest.exchange(RequestEntity.post(new URI("/"))
-				.contentType(MediaType.TEXT_PLAIN).body("5"), String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
+		GrpcTestClient client = new GrpcTestClient("localhost", server.getPort());
+		List<String> result = client.send("5");
+		assertThat(result).contains("10");
 	}
 }
