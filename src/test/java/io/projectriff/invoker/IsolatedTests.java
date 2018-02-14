@@ -16,8 +16,6 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.URI;
 
 import org.junit.After;
@@ -35,6 +33,8 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -84,6 +84,32 @@ public class IsolatedTests {
 		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
 				.getField(this.runner, "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler")).isFalse();
+	}
+
+	@Test
+	public void messageFunction() throws Exception {
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
+				+ "?handler=io.projectriff.functions.MessageGreeter");
+		ResponseEntity<String> result = rest
+				.exchange(
+						RequestEntity.post(new URI("http://localhost:" + port + "/"))
+								.contentType(MediaType.TEXT_PLAIN).body("World"),
+						String.class);
+		assertThat(result.getBody()).contains("Hello");
+		assertThat(result.getBody()).doesNotContain("Exception");
+	}
+
+	@Test
+	public void fluxMessageFunction() throws Exception {
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
+				+ "?handler=io.projectriff.functions.FluxMessageGreeter");
+		ResponseEntity<String> result = rest
+				.exchange(
+						RequestEntity.post(new URI("http://localhost:" + port + "/"))
+								.contentType(MediaType.TEXT_PLAIN).body("World"),
+						String.class);
+		assertThat(result.getBody()).contains("Hello");
+		assertThat(result.getBody()).doesNotContain("Exception");
 	}
 
 	@Test
