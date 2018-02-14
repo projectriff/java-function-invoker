@@ -18,13 +18,49 @@ package io.projectriff.functions;
 
 import java.util.function.Function;
 
-import org.reactivestreams.Publisher;
-
 import reactor.core.publisher.Flux;
 
-public class FluxDoubler implements Function<Publisher<Integer>, Publisher<Integer>> {
+public class Greeter implements Function<Flux<Foo>, Flux<Bar>> {
 	@Override
-	public Publisher<Integer> apply(Publisher<Integer> integer) {
-		return Flux.from(integer).map(i -> 2*i);
+	public Flux<Bar> apply(Flux<Foo> foos) {
+		return foos.map(foo -> new Bar("Hello " + foo.getValue()));
+	}
+}
+
+class Foo {
+	private String value;
+
+	public Foo() {
+	}
+
+	public Foo(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+}
+
+class Bar {
+	private String value;
+
+	public Bar() {
+	}
+
+	public Bar(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
 	}
 }

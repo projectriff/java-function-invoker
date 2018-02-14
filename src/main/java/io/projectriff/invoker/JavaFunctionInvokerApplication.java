@@ -45,18 +45,26 @@ public class JavaFunctionInvokerApplication {
 	private ApplicationRunner runner;
 	private URLClassLoader classLoader;
 
-	public static void main(String[] args) {
-		JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
-		if (application.isolated(args)) {
+	public static void main(String[] args) throws IOException {
+		if (JavaFunctionInvokerApplication.isolated(args)) {
+			JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
 			application.run(args);
+			application.awaitTermination();
 		}
 		else {
-			SpringApplication.run(JavaFunctionInvokerApplication.class, args);
+			SpringApplication.run(JavaFunctionInvokerApplication.class, args)
+					.getBean(GrpcConfiguration.class).awaitTermination();
 		}
 	}
 
 	public void run(String... args) {
 		runner().run(args);
+	}
+
+	private void awaitTermination() {
+		if (this.runner != null) {
+			this.runner.awaitTermination();
+		}
 	}
 
 	@PreDestroy
@@ -82,7 +90,7 @@ public class JavaFunctionInvokerApplication {
 		return this.runner;
 	}
 
-	private boolean isolated(String[] args) {
+	private static boolean isolated(String[] args) {
 		for (String arg : args) {
 			if (arg.equals("--function.runner.isolated=false")) {
 				return false;

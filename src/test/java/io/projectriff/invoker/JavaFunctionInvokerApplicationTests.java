@@ -16,8 +16,6 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.URI;
 
 import org.junit.Test;
@@ -35,6 +33,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Mark Fisher
  */
@@ -43,7 +43,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @DirtiesContext
 @TestPropertySource(properties = "function.uri=file:target/test-classes"
 		+ "?handler=io.projectriff.functions.Doubler")
-public abstract class JavaFunctionInvokerApplicationTests {
+public class JavaFunctionInvokerApplicationTests {
 
 	@Autowired
 	private TestRestTemplate rest;
