@@ -18,13 +18,14 @@ package io.projectriff.functions;
 
 import java.util.function.Function;
 
-import org.reactivestreams.Publisher;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 
-import reactor.core.publisher.Flux;
+public class MessageGreeter implements Function<Message<String>, Message<String>> {
 
-public class FluxDoubler implements Function<Publisher<Integer>, Publisher<Integer>> {
-	@Override
-	public Publisher<Integer> apply(Publisher<Integer> integer) {
-		return Flux.from(integer).map(i -> 2*i);
+	public Message<String> apply(Message<String> in) {
+		return MessageBuilder.withPayload("Hello " + in.getPayload())
+				.setHeaders(new MessageHeaderAccessor(in)).build();
 	}
 }

@@ -12,16 +12,16 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.9.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<spring-cloud.version>Edgware.SR1</spring-cloud.version>
-		<spring-cloud-function.version>1.0.0.M3</spring-cloud-function.version>
-		<spring-cloud-stream-file.version>1.0.0.M1</spring-cloud-stream-file.version>
+		<spring-cloud.version>Edgware.SR2</spring-cloud.version>
+		<spring-cloud-function.version>1.0.0.BUILD-SNAPSHOT</spring-cloud-function.version>
+		<spring-cloud-stream-file.version>1.0.0.BUILD-SNAPSHOT</spring-cloud-stream-file.version>
 		<spring-cloud-deployer.version>1.2.0.RELEASE</spring-cloud-deployer.version>
 		<reactor.version>3.2.0.M1</reactor.version>
 		<dockerfile-maven.version>1.3.6</dockerfile-maven.version>
@@ -122,6 +122,20 @@
 									<version>${project.version}</version>
 								</artifactItem>
 							</artifactItems>
+						</configuration>
+					</execution>
+					<execution>
+						<id>reactor</id>
+						<phase>generate-test-resources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/test-functions</outputDirectory>
+							<includeArtifactIds>spring-messaging,spring-core,jcl-over-slf4j,slf4j-api</includeArtifactIds>
+							<excludeArtifactIds>*</excludeArtifactIds>
+							<overWriteReleases>true</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
 						</configuration>
 					</execution>
 				</executions>
