@@ -19,6 +19,7 @@ package io.projectriff.invoker;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,8 +49,18 @@ public class ComposedJavaFunctionInvokerApplicationTests {
 	@Autowired
 	private TestRestTemplate rest;
 
+	@Autowired
+	private GrpcConfiguration server;
+
 	@Test
-	public void contextLoads() throws Exception {
+	public void grpc() throws Exception {
+		GrpcTestClient client = new GrpcTestClient("localhost", server.getPort());
+		List<String> result = client.send("2");
+		assertThat(result).contains("quatre");
+	}
+
+	@Test
+	public void http() throws Exception {
 		ResponseEntity<String> result = rest.exchange(RequestEntity.post(new URI("/"))
 				.contentType(MediaType.TEXT_PLAIN).body("2"), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
