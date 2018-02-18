@@ -4,6 +4,8 @@
 .settings/
 .springBeans
 target
+.sts4-cache/
+.attach_*
 
 .idea/
 *.iml
