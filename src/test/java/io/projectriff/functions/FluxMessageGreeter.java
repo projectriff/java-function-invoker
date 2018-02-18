@@ -25,11 +25,12 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import reactor.core.publisher.Flux;
 
 public class FluxMessageGreeter
-		implements Function<Flux<Message<String>>, Flux<Message<String>>> {
+		implements Function<Flux<Message<Foo>>, Flux<Message<Bar>>> {
 
-	public Flux<Message<String>> apply(Flux<Message<String>> in) {
-		return in.map(
-				message -> MessageBuilder.withPayload("Hello " + message.getPayload())
-						.setHeaders(new MessageHeaderAccessor(message)).build());
+	@Override
+	public Flux<Message<Bar>> apply(Flux<Message<Foo>> in) {
+		return in.map(message -> MessageBuilder
+				.withPayload(new Bar("Hello " + message.getPayload().getValue()))
+				.setHeaders(new MessageHeaderAccessor(message)).build());
 	}
 }

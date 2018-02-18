@@ -88,8 +88,9 @@ public class IsolatedTests {
 
 	@Test
 	public void messageFunction() throws Exception {
-		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
-				+ "?handler=io.projectriff.functions.MessageGreeter");
+		runner.run("--server.port=" + port,
+				"--function.uri=file:target/test-classes,file:target/test-functions"
+						+ "?handler=io.projectriff.functions.MessageGreeter");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -101,13 +102,13 @@ public class IsolatedTests {
 
 	@Test
 	public void fluxMessageFunction() throws Exception {
-		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
-				+ "?handler=io.projectriff.functions.FluxMessageGreeter");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("World"),
-						String.class);
+		runner.run("--server.port=" + port,
+				"--function.uri=file:target/test-classes,file:target/test-functions"
+						+ "?handler=io.projectriff.functions.FluxMessageGreeter");
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("http://localhost:" + port + "/"))
+				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"World\"}"),
+				String.class);
 		assertThat(result.getBody()).contains("Hello");
 		assertThat(result.getBody()).doesNotContain("Exception");
 	}

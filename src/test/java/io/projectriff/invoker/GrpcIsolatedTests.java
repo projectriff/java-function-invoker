@@ -60,15 +60,16 @@ public class GrpcIsolatedTests {
 	@Test
 	public void fluxFunctionNotIsolated() throws Exception {
 		expected.expect(BeanCreationException.class);
-		SpringApplication.run(JavaFunctionInvokerApplication.class,
-				"--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes"
+		SpringApplication.run(JavaFunctionInvokerApplication.class, "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.FluxDoubler");
 	}
 
 	@Test
 	public void fluxFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes"
-				+ "?handler=io.projectriff.functions.FluxDoubler");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.FluxDoubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
 		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
@@ -78,8 +79,9 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void fluxJson() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes"
-				+ "?handler=io.projectriff.functions.Greeter");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Greeter");
 		List<String> result = client.send("{\"value\":\"World\"}");
 		// Custom JSON serialization doesn't work across the class loader boundary
 		assertThat(result).contains("{\"value\":\"Hello World\"}");
@@ -90,40 +92,54 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void messageFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
-				+ "?handler=io.projectriff.functions.MessageGreeter");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes,file:target/test-functions"
+						+ "?handler=io.projectriff.functions.MessageGreeter");
 		List<String> result = client.send("World");
 		assertThat(result).contains("Hello World");
 	}
 
 	@Test
 	public void fluxMessageFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes,file:target/test-functions"
-				+ "?handler=io.projectriff.functions.FluxMessageGreeter");
-		List<String> result = client.send("World");
-		assertThat(result).contains("Hello World");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes,file:target/test-functions"
+						+ "?handler=io.projectriff.functions.FluxMessageGreeter");
+		List<String> result = client.send("{\"value\":\"World\"}");
+		assertThat(result.get(0)).contains("Hello World");
 	}
 
 	@Test
 	public void simpleFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=file:target/test-classes"
-				+ "?handler=io.projectriff.functions.Doubler");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Doubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
 	}
 
 	@Test
+	public void pojoFunction() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Greeter");
+		List<String> result = client.send("{\"value\":\"World\"}");
+		assertThat(result.get(0)).contains("Hello World");
+	}
+
+	@Test
 	public void appClassPath() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=app:classpath?"
-				+ "handler=io.projectriff.functions.SpringDoubler");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=app:classpath?"
+						+ "handler=io.projectriff.functions.SpringDoubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
 	}
 
 	@Test
 	public void mainClassBeanName() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--function.uri=app:classpath?"
-				+ "handler=myDoubler&" + "main=io.projectriff.functions.FunctionApp");
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=app:classpath?" + "handler=myDoubler&"
+						+ "main=io.projectriff.functions.FunctionApp");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
 	}
