@@ -16,6 +16,8 @@
 
 package io.projectriff.invoker;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import io.grpc.stub.StreamObserver;
@@ -32,6 +34,8 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 /**
  * @author Eric Bottard
@@ -48,13 +52,47 @@ public class JavaFunctionInvokerServer
 
 	private static final Log logger = LogFactory.getLog(JavaFunctionInvokerServer.class);
 
+	private static String CONTEXT = "FUNCTION_INVOKER_CONTEXT";
+
 	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
 			Class<?> inputType, Class<?> outputType, boolean isMessage) {
 		this.mapper = mapper;
 		this.inputType = inputType;
 		this.outputType = outputType;
-		this.function = flux -> function.apply(flux.map(input(isMessage, function)))
-				.map(output(isMessage, function));
+		this.function = enhance(
+				flux -> function.apply(flux.map(input(isMessage, function)))
+						.map(output(isMessage, function)));
+	}
+
+	private Function<Flux<Message<?>>, Flux<Message<?>>> enhance(
+			Function<Flux<Message<?>>, Flux<Message<?>>> function) {
+		return messages -> function.apply(messages.flatMap(m -> push(m)))
+				.flatMap(m -> pop(m)).subscriberContext(setup());
+	}
+
+	private Function<Context, Context> setup() {
+		return ctx -> ctx.put(CONTEXT, new HashMap<String, Object>());
+	}
+
+	private Mono<Message<?>> pop(Message<?> message) {
+		return Mono.subscriberContext().map(ctx -> {
+			Map<String, Object> map = ctx.get(CONTEXT);
+			if (map.isEmpty()) {
+				return message;
+			}
+			Message<?> result = MessageBuilder.fromMessage(message)
+					.copyHeadersIfAbsent(map).build();
+			map.clear();
+			return result;
+		});
+	}
+
+	private Mono<Message<?>> push(Message<?> value) {
+		return Mono.subscriberContext().map(ctx -> {
+			Map<String, Object> map = ctx.get(CONTEXT);
+			map.putAll(value.getHeaders());
+			return value;
+		});
 	}
 
 	private Function<Message<?>, Object> input(boolean isMessage,

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -65,14 +66,20 @@ public class GrpcTestClient {
 	}
 
 	public List<String> send(MediaType mediaType, String... payloads) throws Exception {
+		return send(message -> new String(message.getPayload().toByteArray()), mediaType,
+				payloads);
+	}
+
+	public <T> List<T> send(Function<Message, T> xform, MediaType mediaType,
+			String... payloads) throws Exception {
 		CountDownLatch latch = new CountDownLatch(1);
-		List<String> value = new ArrayList<>();
+		List<T> value = new ArrayList<>();
 		StreamObserver<Message> obsvr = asyncStub.call(new StreamObserver<Message>() {
 
 			@Override
 			public void onNext(Message message) {
 				logger.info("Message: " + message);
-				value.add(new String(message.getPayload().toByteArray()));
+				value.add(xform.apply(message));
 			}
 
 			@Override

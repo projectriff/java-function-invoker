@@ -17,6 +17,7 @@
 package io.projectriff.invoker;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -123,8 +124,12 @@ public class GrpcIsolatedTests {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Doubler");
-		List<String> result = client.send("5");
-		assertThat(result).contains("10");
+		List<String> result = client.send(
+				message -> new String(message.getPayload().toByteArray()) + ":"
+						+ message.getHeadersMap().get("correlationId").getValues(0),
+				MediaType.TEXT_PLAIN, "5");
+		assertThat(result.get(0)).startsWith("10:");
+		assertThat(UUID.fromString(result.get(0).split(":")[1])).isNotNull();
 	}
 
 	@Test
