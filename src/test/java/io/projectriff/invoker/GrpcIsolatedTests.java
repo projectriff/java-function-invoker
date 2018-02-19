@@ -26,6 +26,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
+import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
 
@@ -109,6 +110,15 @@ public class GrpcIsolatedTests {
 	}
 
 	@Test
+	public void windowFunction() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes,file:target/test-functions"
+						+ "?handler=io.projectriff.functions.VoteStreamProcessor");
+		List<String> result = client.send("one", "one", "two");
+		assertThat(result.get(0)).contains("\"two\":1");
+	}
+
+	@Test
 	public void simpleFunction() throws Exception {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
@@ -122,7 +132,8 @@ public class GrpcIsolatedTests {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Greeter");
-		List<String> result = client.send("{\"value\":\"World\"}");
+		List<String> result = client.send(MediaType.APPLICATION_JSON,
+				"{\"value\":\"World\"}");
 		assertThat(result.get(0)).contains("Hello World");
 	}
 

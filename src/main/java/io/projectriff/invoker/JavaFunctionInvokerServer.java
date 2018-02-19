@@ -23,12 +23,15 @@ import io.projectriff.grpc.function.MessageFunctionGrpc;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.function.context.message.MessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
+import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.UnicastProcessor;
 
 /**
  * @author Eric Bottard
@@ -43,22 +46,28 @@ public class JavaFunctionInvokerServer
 	private final Class<?> outputType;
 	private final Gson mapper;
 
+	private static final Log logger = LogFactory.getLog(JavaFunctionInvokerServer.class);
+
 	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
 			Class<?> inputType, Class<?> outputType, boolean isMessage) {
 		this.mapper = mapper;
 		this.inputType = inputType;
 		this.outputType = outputType;
-		this.function = flux -> function.apply(flux.map(input(isMessage, function))).map(output(isMessage, function));
+		this.function = flux -> function.apply(flux.map(input(isMessage, function)))
+				.map(output(isMessage, function));
 	}
 
-	private Function<Message<?>, Object> input(boolean isMessage, Function<?, ?> function) {
+	private Function<Message<?>, Object> input(boolean isMessage,
+			Function<?, ?> function) {
 		if (!isMessage) {
 			return message -> message.getPayload();
 		}
-		return message -> MessageUtils.create(function, message.getPayload(), message.getHeaders());
+		return message -> MessageUtils.create(function, message.getPayload(),
+				message.getHeaders());
 	}
 
-	private Function<Object, Message<?>> output(boolean isMessage, Function<?, ?> function) {
+	private Function<Object, Message<?>> output(boolean isMessage,
+			Function<?, ?> function) {
 		if (!isMessage) {
 			return payload -> MessageBuilder.withPayload(payload).build();
 		}
@@ -69,7 +78,7 @@ public class JavaFunctionInvokerServer
 	public StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> call(
 			StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> responseObserver) {
 
-		UnicastProcessor<Message<?>> emitter = UnicastProcessor.<Message<?>>create();
+		EmitterProcessor<Message<?>> emitter = EmitterProcessor.<Message<?>>create();
 		function.apply(emitter).subscribe(
 				message -> responseObserver
 						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
@@ -98,6 +107,9 @@ public class JavaFunctionInvokerServer
 	}
 
 	private Message<byte[]> payloadToBytes(Message<?> message) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Outgoing: " + message);
+		}
 		return MessageBuilder.createMessage(toBytes(message.getPayload()),
 				message.getHeaders());
 	}
@@ -118,8 +130,12 @@ public class JavaFunctionInvokerServer
 	}
 
 	private Message<?> payloadFromBytes(Message<byte[]> message) {
-		return MessageBuilder.createMessage(fromBytes(message.getPayload()),
-				message.getHeaders());
+		Message<Object> result = MessageBuilder
+				.createMessage(fromBytes(message.getPayload()), message.getHeaders());
+		if (logger.isDebugEnabled()) {
+			logger.debug("Incoming: " + result);
+		}
+		return result;
 	}
 
 	private Object fromBytes(byte[] payload) {

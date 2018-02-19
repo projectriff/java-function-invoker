@@ -18,6 +18,7 @@ package io.projectriff.invoker;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +26,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import io.projectriff.grpc.function.FunctionProtos.Message;
+import io.projectriff.grpc.function.FunctionProtos.Message.HeaderValue;
 import io.projectriff.grpc.function.MessageFunctionGrpc;
 import io.projectriff.grpc.function.MessageFunctionGrpc.MessageFunctionStub;
 
@@ -32,6 +34,8 @@ import com.google.protobuf.ByteString;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.springframework.http.MediaType;
 
 /**
  * @author Dave Syer
@@ -57,6 +61,10 @@ public class GrpcTestClient {
 	}
 
 	public List<String> send(String... payloads) throws Exception {
+		return send(MediaType.TEXT_PLAIN, payloads);
+	}
+
+	public List<String> send(MediaType mediaType, String... payloads) throws Exception {
 		CountDownLatch latch = new CountDownLatch(1);
 		List<String> value = new ArrayList<>();
 		StreamObserver<Message> obsvr = asyncStub.call(new StreamObserver<Message>() {
@@ -80,10 +88,16 @@ public class GrpcTestClient {
 			}
 		});
 		try {
+			String correlationId = UUID.randomUUID().toString();
 			for (String payload : payloads) {
 				obsvr.onNext(Message.newBuilder()
 						.setPayload(
 								ByteString.copyFrom(payload, Charset.defaultCharset()))
+						.putHeaders("Content-Type",
+								HeaderValue.newBuilder().addValues(mediaType.toString())
+										.build())
+						.putHeaders("correlationId",
+								HeaderValue.newBuilder().addValues(correlationId).build())
 						.build());
 				Thread.sleep(100L);
 			}
