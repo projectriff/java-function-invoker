@@ -20,17 +20,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.reactivestreams.Publisher;
+
 import reactor.core.publisher.Flux;
 
 /**
  * @author Dave Syer
  *
  */
-public class WordCounter implements Function<Flux<String>, Flux<Map<String, Integer>>> {
+public class WordCounter implements Function<Publisher<String>, Publisher<Map<String, Integer>>> {
 
 	@Override
-	public Flux<Map<String, Integer>> apply(Flux<String> words) {
-		return words.window(Duration.ofSeconds(10))
+	public Publisher<Map<String, Integer>> apply(Publisher<String> words) {
+		return Flux.from(words).window(Duration.ofSeconds(10))
 				.flatMap(f -> f.flatMap(word -> Flux.fromArray(word.split("\\W")))
 						.reduce(new HashMap<String, Integer>(), (map, word) -> {
 							map.merge(word, 1, Integer::sum);
