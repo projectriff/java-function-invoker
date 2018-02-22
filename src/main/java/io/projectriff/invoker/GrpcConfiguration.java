@@ -72,14 +72,18 @@ public class GrpcConfiguration {
 	/** Start serving requests. */
 	@EventListener(ContextRefreshedEvent.class)
 	public void start() throws IOException {
-		Function<Flux<?>, Flux<?>> function = catalog
-				.lookupFunction(functions.getFunctionName());
-		this.server = ServerBuilder.forPort(this.port)
-				.addService(new JavaFunctionInvokerServer(function, this.mapper,
-						inspector.getInputType(function),
-						inspector.getOutputType(function), inspector.isMessage(function)))
-				.build();
-		this.server.start();
+		try {
+			Function<Flux<?>, Flux<?>> function = catalog
+					.lookupFunction(functions.getFunctionName());
+			this.server = ServerBuilder.forPort(this.port)
+					.addService(new JavaFunctionInvokerServer(function, this.mapper,
+							inspector.getInputType(function),
+							inspector.getOutputType(function), inspector.isMessage(function)))
+					.build();
+			this.server.start();
+		} catch (IOException e) {
+			throw new IOException(String.format("gRPC server failed to start listening on port %d", port), e);
+		}
 		logger.info("Server started, listening on " + port);
 	}
 
