@@ -16,8 +16,9 @@
 
 package io.projectriff.invoker;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import io.grpc.stub.StreamObserver;
@@ -34,8 +35,6 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
 /**
  * @author Eric Bottard
@@ -52,8 +51,6 @@ public class JavaFunctionInvokerServer
 
 	private static final Log logger = LogFactory.getLog(JavaFunctionInvokerServer.class);
 
-	private static String CONTEXT = "FUNCTION_INVOKER_CONTEXT";
-
 	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
 			Class<?> inputType, Class<?> outputType, boolean isMessage) {
 		this.mapper = mapper;
@@ -66,33 +63,24 @@ public class JavaFunctionInvokerServer
 
 	private Function<Flux<Message<?>>, Flux<Message<?>>> enhance(
 			Function<Flux<Message<?>>, Flux<Message<?>>> function) {
-		return messages -> function.apply(messages.flatMap(m -> push(m)))
-				.flatMap(m -> pop(m)).subscriberContext(setup());
+		AtomicReference<Map<String, Object>> headers = new AtomicReference<>();
+		return messages -> function.apply(messages.map(m -> push(headers, m)))
+				.map(m -> pop(headers, m));
 	}
 
-	private Function<Context, Context> setup() {
-		return ctx -> ctx.put(CONTEXT, new HashMap<String, Object>());
+	private Message<?> pop(AtomicReference<Map<String, Object>> headers,
+			Message<?> message) {
+		Map<String, Object> map = headers.getAndSet(Collections.emptyMap());
+		if (map.isEmpty()) {
+			return message;
+		}
+		return MessageBuilder.fromMessage(message).copyHeadersIfAbsent(map).build();
 	}
 
-	private Mono<Message<?>> pop(Message<?> message) {
-		return Mono.subscriberContext().map(ctx -> {
-			Map<String, Object> map = ctx.get(CONTEXT);
-			if (map.isEmpty()) {
-				return message;
-			}
-			Message<?> result = MessageBuilder.fromMessage(message)
-					.copyHeadersIfAbsent(map).build();
-			map.clear();
-			return result;
-		});
-	}
-
-	private Mono<Message<?>> push(Message<?> value) {
-		return Mono.subscriberContext().map(ctx -> {
-			Map<String, Object> map = ctx.get(CONTEXT);
-			map.putAll(value.getHeaders());
-			return value;
-		});
+	private Message<?> push(AtomicReference<Map<String, Object>> headers,
+			Message<?> value) {
+		headers.set(value.getHeaders());
+		return value;
 	}
 
 	private Function<Message<?>, Object> input(boolean isMessage,
