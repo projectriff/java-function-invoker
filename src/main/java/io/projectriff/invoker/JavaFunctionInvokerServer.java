@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.projectriff.grpc.function.MessageFunctionGrpc;
 
@@ -120,7 +121,9 @@ public class JavaFunctionInvokerServer
 		function.apply(emitter).subscribe(
 				message -> responseObserver
 						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
-				responseObserver::onError, responseObserver::onCompleted);
+				t -> responseObserver
+						.onError(createStatus(t).asException()),
+				responseObserver::onCompleted);
 
 		return new StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message>() {
 
@@ -189,5 +192,11 @@ public class JavaFunctionInvokerServer
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot convert to " + inputType, e);
 		}
+	}
+
+	private Status createStatus(Throwable t) {
+		return Status.fromCode(t instanceof IllegalArgumentException ? Status.Code.INVALID_ARGUMENT : Status.Code.UNKNOWN)
+				.withDescription(t.getMessage())
+				.withCause(t);
 	}
 }
