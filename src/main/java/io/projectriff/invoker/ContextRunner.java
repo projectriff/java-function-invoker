@@ -54,9 +54,14 @@ public class ContextRunner {
 							StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 							new MapPropertySource("appDeployer", properties));
 					running = true;
-					context = new SpringApplicationBuilder(source)
-							.listeners(new BeanCountingApplicationListener())
-							.environment(environment).registerShutdownHook(false)
+					SpringApplicationBuilder builder = new SpringApplicationBuilder(
+							source);
+					if (ClassUtils.isPresent(
+							"io.projectriff.invoker.BeanCountingApplicationListener",
+							null)) {
+						builder.listeners(new BeanCountingApplicationListener());
+					}
+					context = builder.environment(environment).registerShutdownHook(false)
 							.run(args);
 				}
 				catch (Throwable ex) {

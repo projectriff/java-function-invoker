@@ -16,15 +16,19 @@
 
 package io.projectriff.invoker;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
@@ -39,6 +43,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.loader.JarLauncher;
+import org.springframework.boot.loader.archive.Archive;
+import org.springframework.boot.loader.archive.JarFileArchive;
 import org.springframework.cloud.deployer.resource.maven.MavenProperties;
 import org.springframework.cloud.deployer.resource.maven.MavenResource;
 import org.springframework.cloud.deployer.resource.maven.MavenResourceLoader;
@@ -113,13 +120,30 @@ public class FunctionConfiguration {
 				.flatMap(toResourceURL(delegatingResourceLoader)).toArray(URL[]::new);
 
 		try {
-			this.creator = new BeanCreator(urls);
+			this.creator = new BeanCreator(expand(urls));
 			this.creator.run(properties.getMainClassName());
 			Arrays.stream(properties.getClassName()).map(this.creator::create)
 					.sequential().forEach(this.creator::register);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot create functions", e);
+		}
+	}
+
+	private URL[] expand(URL[] urls) {
+		if (urls.length != 1 || !"file".equals(urls[0].getProtocol())) {
+			return urls;
+		}
+		URL url = urls[0];
+		if (!url.toString().endsWith(".jar")) {
+			return urls;
+		}
+		try {
+			JarFileArchive archive = new JarFileArchive(new File(url.toURI()));
+			return new ComputeLauncher(archive).getClassLoaderUrls();
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Cannot create class loader for " + url, e);
 		}
 	}
 
@@ -154,6 +178,29 @@ public class FunctionConfiguration {
 				throw new UncheckedIOException(e);
 			}
 		};
+	}
+
+	private class ComputeLauncher extends JarLauncher {
+
+		public ComputeLauncher(JarFileArchive archive) {
+			super(archive);
+		}
+
+		public URL[] getClassLoaderUrls() throws Exception {
+			List<Archive> archives = getClassPathArchives();
+			if (archives.isEmpty()) {
+				return new URL[] { getArchive().getUrl() };
+			}
+			return archives.stream().map(archive -> {
+				try {
+					return archive.getUrl();
+				}
+				catch (MalformedURLException e) {
+					throw new IllegalStateException("Bad URL: " + archive, e);
+				}
+			}).collect(Collectors.toList()).toArray(new URL[0]);
+		}
+
 	}
 
 	/**
