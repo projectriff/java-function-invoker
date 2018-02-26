@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  *
  */
-public class FatJarTests {
+public class FatJarPojoTests {
 
 	private TestRestTemplate rest;
 	private int port = SocketUtils.findAvailableTcpPort();
@@ -61,36 +61,21 @@ public class FatJarTests {
 	@Before
 	public void check() {
 		sampleJar = new File(
-				"target/it/pof/target/function-sample-pof-1.0.0.BUILD-SNAPSHOT-exec.jar");
+				"target/it/pojo/target/function-sample-pojo-1.0.0.BUILD-SNAPSHOT.jar");
 		Assume.assumeTrue("Sample jar does not exist: " + sampleJar, sampleJar.exists());
 	}
 
 	@Test
 	public void fatJar() throws Exception {
 		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=" + sampleJar.toURI() + "?handler=functions.Greeter");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("World"),
-						String.class);
+				"--function.uri=" + sampleJar.toURI()
+						+ "?handler=uppercase&main=com.example.SampleApplication");
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("http://localhost:" + port + "/"))
+				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"foo\"}"),
+				String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("Hello World");
-	}
-
-	@Test
-	public void libJar() throws Exception {
-		String uri = sampleJar.toURI().toString();
-		uri = uri.replaceAll("-exec", "");
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=" + uri + "?handler=functions.Greeter");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("World"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("Hello World");
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"}]");
 	}
 
 }
