@@ -52,6 +52,8 @@ import org.springframework.cloud.deployer.resource.maven.MavenResourceLoader;
 import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
 import org.springframework.cloud.function.context.FunctionRegistration;
 import org.springframework.cloud.function.context.FunctionRegistry;
+import org.springframework.cloud.function.context.FunctionType;
+import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -267,8 +269,31 @@ public class FunctionConfiguration {
 		}
 
 		public void register(Object bean) {
-			registry.register(new FunctionRegistration<Object>(bean)
-					.names("function" + counter.getAndIncrement()));
+			FunctionRegistration<Object> registration = new FunctionRegistration<Object>(
+					bean).names("function" + counter.getAndIncrement());
+			if (this.runner != null) {
+				if (this.runner.containsBean(FunctionInspector.class.getName())) {
+					Object inspector = this.runner
+							.getBean(FunctionInspector.class.getName());
+					Class<?> input = (Class<?>) this.runner.evaluate(
+							"getInputType(#function)", inspector, "function", bean);
+					FunctionType type = FunctionType.from(input);
+					Class<?> output = (Class<?>) this.runner.evaluate(
+							"getOutputType(#function)", inspector, "function", bean);
+					type = type.to(output);
+					if (((Boolean) this.runner.evaluate("isMessage(#function)", inspector,
+							"function", bean))) {
+						type = type.message();
+					}
+					Class<?> wrapper = (Class<?>) this.runner.evaluate(
+							"getInputWrapper(#function)", inspector, "function", bean);
+					if (FunctionType.isWrapper(wrapper)) {
+						type = type.wrap(wrapper);
+					}
+					registration.type(type.getType());
+				}
+			}
+			registry.register(registration);
 		}
 
 		public void close() {

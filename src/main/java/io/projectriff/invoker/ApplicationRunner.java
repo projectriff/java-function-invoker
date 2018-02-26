@@ -29,6 +29,7 @@ import org.springframework.context.support.LiveBeansView;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.StandardTypeLocator;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -60,6 +61,7 @@ public class ApplicationRunner {
 			ClassUtils.overrideThreadContextClassLoader(this.classLoader);
 			Class<?> cls = this.classLoader.loadClass(ContextRunner.class.getName());
 			this.app = new StandardEvaluationContext(cls.newInstance());
+			this.app.setTypeLocator(new StandardTypeLocator(this.classLoader));
 			runContext(this.source, defaultProperties(UUID.randomUUID().toString()),
 					args);
 		}
@@ -123,6 +125,21 @@ public class ApplicationRunner {
 			return !beans.isEmpty();
 		}
 		return false;
+	}
+
+	public Object evaluate(String expression, Object root, Object... attrs) {
+		Expression parsed = new SpelExpressionParser().parseExpression(expression);
+		StandardEvaluationContext context = new StandardEvaluationContext(root);
+		if (attrs.length % 2 != 0) {
+			throw new IllegalArgumentException(
+					"Context attributes must be name, value pairs");
+		}
+		for (int i = 0; i < attrs.length / 2; i++) {
+			String name = (String) attrs[2 * i];
+			Object value = attrs[2 * i + 1];
+			context.setVariable(name, value);
+		}
+		return parsed.getValue(context);
 	}
 
 	@PreDestroy
