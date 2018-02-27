@@ -1,4 +1,4 @@
-= Java Function Invoker image:https://ci.projectriff.io/api/v1/teams/main/pipelines/riff/jobs/build-java-function-invoker-container/badge[Java Invoker, link=https://ci.projectriff.io/teams/main/pipelines/riff/jobs/build-java-function-invoker-container/builds/latest]
+= Java Function Invoker image:https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master[Java Invoker, link=https://travis-ci.org/projectriff/java-function-invoker]
 
 Testing locally:
 
