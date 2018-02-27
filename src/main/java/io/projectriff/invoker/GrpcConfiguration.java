@@ -30,8 +30,8 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
-import org.springframework.cloud.function.core.FunctionCatalog;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -78,11 +78,14 @@ public class GrpcConfiguration {
 			this.server = ServerBuilder.forPort(this.port)
 					.addService(new JavaFunctionInvokerServer(function, this.mapper,
 							inspector.getInputType(function),
-							inspector.getOutputType(function), inspector.isMessage(function)))
+							inspector.getOutputType(function),
+							inspector.isMessage(function)))
 					.build();
 			this.server.start();
-		} catch (IOException e) {
-			throw new IOException(String.format("gRPC server failed to start listening on port %d", port), e);
+		}
+		catch (IOException e) {
+			throw new IOException(String
+					.format("gRPC server failed to start listening on port %d", port), e);
 		}
 		logger.info("Server started, listening on " + port);
 	}
