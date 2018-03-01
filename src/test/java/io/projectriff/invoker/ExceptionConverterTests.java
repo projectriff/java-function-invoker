@@ -1,15 +1,13 @@
 package io.projectriff.invoker;
 
-import io.grpc.Status;
-import io.projectriff.functions.Doubler;
-import io.projectriff.functions.FunctionApp;
-import org.junit.Test;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.io.FileNotFoundException;
 import java.security.AccessControlException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeoutException;
+
+import io.grpc.Status;
+
+import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +27,8 @@ public class ExceptionConverterTests {
 
 	@Test
 	public void invalidArgument() {
-		checkStatus(new IllegalArgumentException(TEST_MESSAGE), Status.Code.INVALID_ARGUMENT);
+		checkStatus(new IllegalArgumentException(TEST_MESSAGE),
+				Status.Code.INVALID_ARGUMENT);
 	}
 
 	@Test
@@ -52,7 +51,8 @@ public class ExceptionConverterTests {
 
 	@Test
 	public void permissionDenied() {
-		checkStatus(new AccessControlException(TEST_MESSAGE), Status.Code.PERMISSION_DENIED);
+		checkStatus(new AccessControlException(TEST_MESSAGE),
+				Status.Code.PERMISSION_DENIED);
 	}
 
 	@Test
@@ -62,7 +62,8 @@ public class ExceptionConverterTests {
 
 	@Test
 	public void failedPrecondition() {
-		checkStatus(new IllegalStateException(TEST_MESSAGE), Status.Code.FAILED_PRECONDITION);
+		checkStatus(new IllegalStateException(TEST_MESSAGE),
+				Status.Code.FAILED_PRECONDITION);
 	}
 
 	@Test
@@ -72,13 +73,16 @@ public class ExceptionConverterTests {
 
 	@Test
 	public void outOfRange() {
-		checkStatus(new ArrayIndexOutOfBoundsException(TEST_MESSAGE), Status.Code.OUT_OF_RANGE);
-		checkStatus(new StringIndexOutOfBoundsException(TEST_MESSAGE), Status.Code.OUT_OF_RANGE);
+		checkStatus(new ArrayIndexOutOfBoundsException(TEST_MESSAGE),
+				Status.Code.OUT_OF_RANGE);
+		checkStatus(new StringIndexOutOfBoundsException(TEST_MESSAGE),
+				Status.Code.OUT_OF_RANGE);
 	}
 
 	@Test
 	public void unimplemented() {
-		checkStatus(new UnsupportedOperationException(TEST_MESSAGE), Status.Code.UNIMPLEMENTED);
+		checkStatus(new UnsupportedOperationException(TEST_MESSAGE),
+				Status.Code.UNIMPLEMENTED);
 	}
 
 	@Test

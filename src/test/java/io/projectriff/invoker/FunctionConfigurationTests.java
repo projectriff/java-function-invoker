@@ -52,7 +52,8 @@ public abstract class FunctionConfigurationTests {
 
 		@Test
 		public void testDouble() {
-			Function<Integer, Integer> function = catalog.lookupFunction("function0");
+			Function<Integer, Integer> function = catalog.lookup(Function.class,
+					"function0");
 			assertThat(function.apply(2), is(4));
 		}
 	}
@@ -67,13 +68,14 @@ public abstract class FunctionConfigurationTests {
 
 		@Test
 		public void testSupplier() {
-			Supplier<Integer> function = catalog.lookupSupplier("function0");
+			Supplier<Integer> function = catalog.lookup(Supplier.class, "function0");
 			assertThat(function.get(), is(1));
 		}
 
 		@Test
 		public void testFunction() {
-			Function<Integer, String> function = catalog.lookupFunction("function1");
+			Function<Integer, String> function = catalog.lookup(Function.class,
+					"function1");
 			assertThat(function.apply(1), is("un"));
 		}
 
@@ -89,13 +91,15 @@ public abstract class FunctionConfigurationTests {
 
 		@Test
 		public void testFunction() {
-			Function<Integer, Integer> function = catalog.lookupFunction("function0");
+			Function<Integer, Integer> function = catalog.lookup(Function.class,
+					"function0");
 			assertThat(function.apply(2), is(4));
 		}
 
 		@Test
 		public void testThen() {
-			Function<Integer, String> function = catalog.lookupFunction("function1");
+			Function<Integer, String> function = catalog.lookup(Function.class,
+					"function1");
 			assertThat(function.apply(4), is("quatre"));
 		}
 	}
@@ -113,7 +117,7 @@ public abstract class FunctionConfigurationTests {
 
 		@Test
 		public void testConsumer() {
-			Consumer<String> function = catalog.lookupConsumer("function1");
+			Consumer<String> function = catalog.lookup(Consumer.class, "function1");
 			function.accept("2");
 			capture.expect(containsString("Seen 2"));
 		}
