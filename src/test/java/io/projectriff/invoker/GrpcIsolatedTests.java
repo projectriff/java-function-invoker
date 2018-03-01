@@ -68,6 +68,14 @@ public class GrpcIsolatedTests {
 	}
 
 	@Test
+	public void nonExistentFunction() throws Exception {
+		expected.expect(BeanCreationException.class);
+		SpringApplication.run(JavaFunctionInvokerApplication.class, "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.NotHere");
+	}
+
+	@Test
 	public void fluxFunction() throws Exception {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
@@ -149,6 +157,13 @@ public class GrpcIsolatedTests {
 						+ "handler=io.projectriff.functions.SpringDoubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void nonExistentFunctionWithMain() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=app:classpath?" + "handler=notThere&"
+						+ "main=io.projectriff.functions.FunctionApp");
 	}
 
 	@Test

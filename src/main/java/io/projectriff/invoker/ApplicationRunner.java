@@ -90,7 +90,12 @@ public class ApplicationRunner {
 			if (containsBeanByName(name)) {
 				return getBeanByName(name);
 			}
-			return getBeanByType(name);
+			try {
+				return getBeanByType(name);
+			}
+			catch (Exception e) {
+				// not there
+			}
 		}
 		return null;
 	}

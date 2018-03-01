@@ -113,6 +113,7 @@ public class ExceptionConverterTests {
 		assertThat(s.getCause()).isEqualTo(cause);
 	}
 
+	@SuppressWarnings("serial")
 	private static class TestException extends Throwable {
 		TestException(String message) {
 			super(message);

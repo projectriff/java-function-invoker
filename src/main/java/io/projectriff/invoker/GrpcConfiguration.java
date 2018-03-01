@@ -75,6 +75,10 @@ public class GrpcConfiguration {
 		try {
 			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
 					functions.getFunctionName());
+			if (function == null) {
+				throw new IllegalStateException(
+						"No such function: " + functions.getFunctionName());
+			}
 			this.server = ServerBuilder.forPort(this.port)
 					.addService(new JavaFunctionInvokerServer(function, this.mapper,
 							inspector.getInputType(function),
