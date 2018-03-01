@@ -73,13 +73,13 @@ public class GrpcConfiguration {
 	@EventListener(ContextRefreshedEvent.class)
 	public void start() throws IOException {
 		try {
-			Function<Flux<?>, Flux<?>> function = catalog
-					.lookupFunction(functions.getFunctionName());
+			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
+					functions.getFunctionName());
 			this.server = ServerBuilder.forPort(this.port)
 					.addService(new JavaFunctionInvokerServer(function, this.mapper,
-							inspector.getInputType(function),
-							inspector.getOutputType(function),
-							inspector.isMessage(function)))
+							inspector.getRegistration(function).getType().getInputType(),
+							inspector.getRegistration(function).getType().getOutputType(),
+							inspector.getRegistration(function).getType().isMessage()))
 					.build();
 			this.server.start();
 		}
