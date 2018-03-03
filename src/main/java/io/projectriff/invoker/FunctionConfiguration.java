@@ -22,7 +22,9 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -133,16 +135,23 @@ public class FunctionConfiguration {
 	}
 
 	private URL[] expand(URL[] urls) {
-		if (urls.length != 1 || !"file".equals(urls[0].getProtocol())) {
-			return urls;
+		List<URL> result = new ArrayList<>();
+		for (URL url : urls) {
+			result.addAll(expand(url));
 		}
-		URL url = urls[0];
+		return result.toArray(new URL[0]);
+	}
+	
+	private List<URL> expand(URL url) {
+		if (!"file".equals(url.getProtocol())) {
+			return Collections.singletonList(url);
+		}
 		if (!url.toString().endsWith(".jar")) {
-			return urls;
+			return Collections.singletonList(url);
 		}
 		try {
 			JarFileArchive archive = new JarFileArchive(new File(url.toURI()));
-			return new ComputeLauncher(archive).getClassLoaderUrls();
+			return Arrays.asList(new ComputeLauncher(archive).getClassLoaderUrls());
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot create class loader for " + url, e);

@@ -44,6 +44,7 @@ public class FatJarPojoTests {
 	private File sampleJar;
 
 	private JavaFunctionInvokerApplication runner;
+	private File sampleDir;
 
 	@Before
 	public void init() {
@@ -60,6 +61,7 @@ public class FatJarPojoTests {
 
 	@Before
 	public void check() {
+		sampleDir = new File("target/it/pojo/target/classes");
 		sampleJar = new File(
 				"target/it/pojo/target/function-sample-pojo-1.0.0.BUILD-SNAPSHOT.jar");
 		Assume.assumeTrue("Sample jar does not exist: " + sampleJar, sampleJar.exists());
@@ -78,4 +80,16 @@ public class FatJarPojoTests {
 		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"}]");
 	}
 
+	@Test
+	public void fatJarAndDirectory() throws Exception {
+		runner.run("--server.port=" + port, "--grpc.port=0",
+				"--function.uri=" + sampleDir.toURI() + "," + sampleJar.toURI()
+						+ "?handler=uppercase&main=com.example.SampleApplication");
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("http://localhost:" + port + "/"))
+				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"foo\"}"),
+				String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"}]");
+	}
 }
