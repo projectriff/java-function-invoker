@@ -71,7 +71,7 @@ public class GrpcConfiguration {
 
 	/** Start serving requests. */
 	@EventListener(ContextRefreshedEvent.class)
-	public void start() throws IOException {
+	public void start() {
 		try {
 			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
 					functions.getFunctionName());
@@ -88,7 +88,7 @@ public class GrpcConfiguration {
 			this.server.start();
 		}
 		catch (IOException e) {
-			throw new IOException(String
+			throw new IllegalStateException(String
 					.format("gRPC server failed to start listening on port %d", port), e);
 		}
 		logger.info("Server started, listening on " + port);

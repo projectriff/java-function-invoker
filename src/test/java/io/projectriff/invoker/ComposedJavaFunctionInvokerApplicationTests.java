@@ -42,8 +42,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext
-@TestPropertySource(properties = "function.uri=file:target/test-classes"
-		+ "?handler=io.projectriff.functions.Doubler,io.projectriff.functions.Frenchizer")
+@TestPropertySource(properties = {"grpc.port=0", "function.uri=file:target/test-classes"
+		+ "?handler=io.projectriff.functions.Doubler,io.projectriff.functions.Frenchizer"})
 public class ComposedJavaFunctionInvokerApplicationTests {
 
 	@Autowired
