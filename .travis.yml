@@ -4,5 +4,15 @@ jdk:
 cache:
   directories:
     - $HOME/.m2
-
-install: ./mvnw install
+matrix:
+  include:
+    - stage: test
+    - stage: publish
+      sudo: required
+      services:
+      - docker
+      script: ./.travis.docker-push.sh
+stages:
+  - test
+  - name: publish
+    if: branch = master AND type = push
