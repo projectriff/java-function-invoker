@@ -16,10 +16,7 @@
 
 package io.projectriff.invoker;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import io.grpc.stub.StreamObserver;
 import io.projectriff.grpc.function.MessageFunctionGrpc;
@@ -27,7 +24,6 @@ import io.projectriff.grpc.function.MessageFunctionGrpc;
 import com.google.gson.Gson;
 
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
@@ -37,42 +33,17 @@ import reactor.core.publisher.Flux;
  * @author Mark Fisher
  * @author Dave Syer
  */
-public class JavaFunctionInvokerServer
+public class JavaConsumerInvokerServer
 		extends MessageFunctionGrpc.MessageFunctionImplBase {
 
-	private final Function<Flux<Message<?>>, Flux<Message<?>>> function;
-	private final MessageConversionUtils output;
+	private final Consumer<Flux<Message<?>>> function;
 	private final MessageConversionUtils input;
 
-	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
-			Class<?> inputType, Class<?> outputType, boolean isMessage) {
-		this.output = new MessageConversionUtils(mapper, outputType);
+	public JavaConsumerInvokerServer(Consumer<Flux<?>> function, Gson mapper,
+			Class<?> inputType, boolean isMessage) {
 		this.input = new MessageConversionUtils(mapper, inputType);
-		this.function = preserveHeaders(flux -> function
-				.apply(flux.map(MessageConversionUtils.input(isMessage, function)))
-				.map(MessageConversionUtils.output(isMessage, function)));
-	}
-
-	private Function<Flux<Message<?>>, Flux<Message<?>>> preserveHeaders(
-			Function<Flux<Message<?>>, Flux<Message<?>>> function) {
-		AtomicReference<Map<String, Object>> headers = new AtomicReference<>();
-		return messages -> function.apply(messages.map(m -> storeHeaders(headers, m)))
-				.map(m -> retrieveHeaders(headers, m));
-	}
-
-	private Message<?> retrieveHeaders(AtomicReference<Map<String, Object>> headers,
-			Message<?> message) {
-		Map<String, Object> map = headers.getAndSet(Collections.emptyMap());
-		if (map.isEmpty()) {
-			return message;
-		}
-		return MessageBuilder.fromMessage(message).copyHeadersIfAbsent(map).build();
-	}
-
-	private Message<?> storeHeaders(AtomicReference<Map<String, Object>> headers,
-			Message<?> value) {
-		headers.set(value.getHeaders());
-		return value;
+		this.function = flux -> function
+				.accept(flux.map(MessageConversionUtils.input(isMessage, function)));
 	}
 
 	@Override
@@ -80,12 +51,9 @@ public class JavaFunctionInvokerServer
 			StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> responseObserver) {
 
 		EmitterProcessor<Message<?>> emitter = EmitterProcessor.<Message<?>>create();
-		function.apply(emitter).subscribe(
-				message -> responseObserver.onNext(
-						MessageConversionUtils.toGrpc(output.payloadToBytes(message))),
-				t -> responseObserver
-						.onError(ExceptionConverter.createStatus(t).asException()),
-				responseObserver::onCompleted);
+		function.accept(emitter.doOnComplete(responseObserver::onCompleted)
+				.doOnError(t -> responseObserver
+						.onError(ExceptionConverter.createStatus(t).asException())));
 
 		return new StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message>() {
 
