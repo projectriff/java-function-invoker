@@ -1,9 +1,13 @@
 = Java Function Invoker image:https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master[Java Invoker, link=https://travis-ci.org/projectriff/java-function-invoker]
 
+Building
+```
+$ ./mvnw clean install dockerfile:build
+```
+
 Testing locally:
 
 ```
-$ ./mvnw clean install dockerfile:build
 $ docker run -ti -p 8080:8080 -v `pwd`/target/test-classes:/classes projectriff/java-function-invoker:0.0.5-snapshot --function.uri='file:classes?handler=io.projectriff.functions.Doubler'
 ```
 
@@ -12,4 +16,10 @@ Then
 ```
 $ curl -v localhost:8080 -H "Content-Type: text/plain" -d 5
 10
+```
+
+Installing as a riff invoker:
+
+```
+kubectl apply -f java-invoker.yaml
 ```

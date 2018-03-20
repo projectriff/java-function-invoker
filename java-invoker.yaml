@@ -1,0 +1,29 @@
+---
+apiVersion: projectriff.io/v1
+kind: Invoker
+metadata:
+  name: java
+spec:
+  version: 0.0.5-snapshot
+  matchers:
+  - "*.jar"
+  - "target/*.jar"
+  properties:
+    handler:
+      default: "{{ .FunctionName }}"
+      description: the fully qualified name of the Function class
+    function:
+      protocol: grpc
+  files:
+  - path: Dockerfile
+    template: |
+      FROM projectriff/java-function-invoker:{{.InvokerVersion}}
+      ARG FUNCTION_JAR=/functions/{{.ArtifactBase}}
+      ARG FUNCTION_CLASS={{.Handler}}
+      ADD {{.Artifact}} $FUNCTION_JAR
+      ENV FUNCTION_URI file://${FUNCTION_JAR}?handler=${FUNCTION_CLASS}
+  - path: .dockerignore
+    template: |
+      *
+      !*.jar
+      !target/*.jar
