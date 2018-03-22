@@ -1,5 +1,14 @@
 = Java Function Invoker image:https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master[Java Invoker, link=https://travis-ci.org/projectriff/java-function-invoker]
 
+== Install as a riff invoker
+
+[source, bash]
+----
+kubectl apply -f java-invoker.yaml
+----
+
+== Development
+
 Testing locally:
 
 ```
