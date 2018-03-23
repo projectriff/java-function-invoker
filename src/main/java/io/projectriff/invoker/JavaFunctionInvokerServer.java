@@ -29,8 +29,10 @@ import com.google.gson.Gson;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
-import reactor.core.publisher.EmitterProcessor;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Operators;
+import reactor.core.publisher.UnicastProcessor;
 
 /**
  * @author Eric Bottard
@@ -79,8 +81,11 @@ public class JavaFunctionInvokerServer
 	public StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> call(
 			StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> responseObserver) {
 
-		EmitterProcessor<Message<?>> emitter = EmitterProcessor.<Message<?>>create();
-		function.apply(emitter).subscribe(
+		UnicastProcessor<Message<?>> emitter = UnicastProcessor.<Message<?>>create();
+		GuardedFlux flux = new GuardedFlux(emitter);
+		Flux<Message<?>> result = function.apply(flux);
+		flux.setSubscribed(true);
+		result.subscribe(
 				message -> responseObserver.onNext(
 						MessageConversionUtils.toGrpc(output.payloadToBytes(message))),
 				t -> responseObserver
@@ -107,6 +112,30 @@ public class JavaFunctionInvokerServer
 			}
 		};
 
+	}
+
+	private final static class GuardedFlux extends Flux<Message<?>> {
+		private boolean subscribed;
+		private final Flux<Message<?>> emitter;
+
+		private GuardedFlux(Flux<Message<?>> emitter) {
+			this.emitter = emitter;
+		}
+
+		@Override
+		public void subscribe(CoreSubscriber<? super Message<?>> actual) {
+			if (subscribed) {
+				emitter.subscribe(actual);
+			}
+			else {
+				Operators.error(actual, new IllegalStateException(
+						"Cannot subscribe inside user function"));
+			}
+		}
+
+		public void setSubscribed(boolean subscribed) {
+			this.subscribed = subscribed;
+		}
 	}
 
 }
