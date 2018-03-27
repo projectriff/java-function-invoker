@@ -11,7 +11,7 @@ spec:
   properties:
     handler:
       default: "functions.{{ .TitleCase .FunctionName }}"
-      description: the fully qualified class name of the function handler
+      description: the fully qualified class name or bean name of the function handler
     function:
       protocol: grpc
   files:
@@ -19,15 +19,15 @@ spec:
     template: |
       FROM projectriff/java-function-invoker:{{.InvokerVersion}}
       ARG FUNCTION_JAR=/functions/{{.ArtifactBase}}
-      ARG FUNCTION_CLASS={{.Handler}}
+      ARG FUNCTION_HANDLER={{.Handler}}
       ADD {{.Artifact}} $FUNCTION_JAR
-      ENV FUNCTION_URI file://${FUNCTION_JAR}?handler=${FUNCTION_CLASS}
+      ENV FUNCTION_URI file://${FUNCTION_JAR}?handler=${FUNCTION_HANDLER}
   doc: |
     {{.Process}} the function based on the function source code specified as the filename, using the artifact (jar file),
-    the function handler(classname), the name and version specified for the function image repository and tag.
+    the function handler (classname or bean name), the name and version specified for the function image repository and tag.
     
     For example, from a maven project directory named 'greeter', type:
     
-        riff {{.Command}} java -i greetings -a target/greeter-1.0.0.jar --handler=Greeter
+        riff {{.Command}} java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
     
     to {{.Result}}.
