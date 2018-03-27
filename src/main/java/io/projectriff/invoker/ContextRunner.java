@@ -20,7 +20,6 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Map;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.MapPropertySource;
@@ -55,8 +54,8 @@ public class ContextRunner {
 							StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 							new MapPropertySource("appDeployer", properties));
 					running = true;
-					SpringApplicationBuilder builder = builder(
-							ClassUtils.resolveClassName(source, null));
+					SpringApplicationBuilder builder = new SpringApplicationBuilder(
+							source);
 					if (ClassUtils.isPresent(
 							"io.projectriff.invoker.BeanCountingApplicationListener",
 							null)) {
@@ -121,21 +120,4 @@ public class ContextRunner {
 	public Throwable getError() {
 		return this.error;
 	}
-
-	public static SpringApplicationBuilder builder(Class<?> type) {
-		// Defensive reflective builder to work with Boot 1.5 and 2.0
-		if (ClassUtils.hasConstructor(SpringApplicationBuilder.class, Class[].class)) {
-			return BeanUtils
-					.instantiateClass(
-							ClassUtils.getConstructorIfAvailable(
-									SpringApplicationBuilder.class, Class[].class),
-							(Object) new Class<?>[] { type });
-		}
-		return BeanUtils
-				.instantiateClass(
-						ClassUtils.getConstructorIfAvailable(
-								SpringApplicationBuilder.class, Object[].class),
-						(Object) new Object[] { type.getName() });
-	}
-
 }
