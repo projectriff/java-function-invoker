@@ -17,16 +17,13 @@ package io.projectriff.invoker;
 
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.function.Function;
 
 import io.projectriff.grpc.function.FunctionProtos.Message.Builder;
 import io.projectriff.grpc.function.FunctionProtos.Message.HeaderValue;
 
-import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 
-import org.springframework.cloud.function.context.message.MessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -36,15 +33,6 @@ import org.springframework.messaging.support.MessageBuilder;
  *
  */
 public class MessageConversionUtils {
-
-	private final Gson mapper;
-
-	private Class<?> type;
-
-	public MessageConversionUtils(Gson mapper, Class<?> type) {
-		this.mapper = mapper;
-		this.type = type;
-	}
 
 	public static Message<byte[]> fromGrpc(
 			io.projectriff.grpc.function.FunctionProtos.Message input) {
@@ -93,60 +81,4 @@ public class MessageConversionUtils {
 		return builder.build();
 	}
 
-	public static Function<Object, Message<?>> output(boolean isMessage,
-			Object function) {
-		if (!isMessage) {
-			return payload -> MessageBuilder.withPayload(payload).build();
-		}
-		return message -> MessageUtils.unpack(function, message);
-	}
-
-	public static Function<Message<?>, Object> input(boolean isMessage, Object function) {
-		if (!isMessage) {
-			return message -> message.getPayload();
-		}
-		return message -> MessageUtils.create(function, message.getPayload(),
-				message.getHeaders());
-	}
-
-	public Message<byte[]> payloadToBytes(Message<?> message) {
-		return MessageBuilder.createMessage(toBytes(message.getPayload()),
-				message.getHeaders());
-	}
-
-	public Message<?> payloadFromBytes(Message<byte[]> message) {
-		Message<Object> result = MessageBuilder
-				.createMessage(fromBytes(message.getPayload()), message.getHeaders());
-		return result;
-	}
-
-	private Object fromBytes(byte[] payload) {
-		if (byte[].class.isAssignableFrom(type)) {
-			return payload;
-		}
-		if (CharSequence.class.isAssignableFrom(type)) {
-			return new String(payload);
-		}
-		try {
-			return mapper.fromJson(new String(payload), type);
-		}
-		catch (Exception e) {
-			throw new IllegalStateException("Cannot convert to " + type, e);
-		}
-	}
-
-	private byte[] toBytes(Object payload) {
-		if (payload instanceof byte[]) {
-			return (byte[]) payload;
-		}
-		if (CharSequence.class.isAssignableFrom(type)) {
-			return payload.toString().getBytes();
-		}
-		try {
-			return mapper.toJson(payload).getBytes();
-		}
-		catch (Exception e) {
-			throw new IllegalStateException("Cannot convert from " + type, e);
-		}
-	}
 }

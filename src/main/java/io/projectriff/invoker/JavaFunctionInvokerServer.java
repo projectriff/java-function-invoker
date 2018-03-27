@@ -26,6 +26,10 @@ import io.projectriff.grpc.function.MessageFunctionGrpc;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.cloud.function.context.message.MessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
@@ -41,16 +45,20 @@ public class JavaFunctionInvokerServer
 		extends MessageFunctionGrpc.MessageFunctionImplBase {
 
 	private final Function<Flux<Message<?>>, Flux<Message<?>>> function;
-	private final MessageConversionUtils output;
-	private final MessageConversionUtils input;
+	private final Class<?> inputType;
+	private final Class<?> outputType;
+	private final Gson mapper;
+
+	private static final Log logger = LogFactory.getLog(JavaFunctionInvokerServer.class);
 
 	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
 			Class<?> inputType, Class<?> outputType, boolean isMessage) {
-		this.output = new MessageConversionUtils(mapper, outputType);
-		this.input = new MessageConversionUtils(mapper, inputType);
-		this.function = preserveHeaders(flux -> function
-				.apply(flux.map(MessageConversionUtils.input(isMessage, function)))
-				.map(MessageConversionUtils.output(isMessage, function)));
+		this.mapper = mapper;
+		this.inputType = inputType;
+		this.outputType = outputType;
+		this.function = preserveHeaders(
+				flux -> function.apply(flux.map(input(isMessage, function)))
+						.map(output(isMessage, function)));
 	}
 
 	private Function<Flux<Message<?>>, Flux<Message<?>>> preserveHeaders(
@@ -75,14 +83,31 @@ public class JavaFunctionInvokerServer
 		return value;
 	}
 
+	private Function<Message<?>, Object> input(boolean isMessage,
+			Function<?, ?> function) {
+		if (!isMessage) {
+			return message -> message.getPayload();
+		}
+		return message -> MessageUtils.create(function, message.getPayload(),
+				message.getHeaders());
+	}
+
+	private Function<Object, Message<?>> output(boolean isMessage,
+			Function<?, ?> function) {
+		if (!isMessage) {
+			return payload -> MessageBuilder.withPayload(payload).build();
+		}
+		return message -> MessageUtils.unpack(function, message);
+	}
+
 	@Override
 	public StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> call(
 			StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> responseObserver) {
 
 		EmitterProcessor<Message<?>> emitter = EmitterProcessor.<Message<?>>create();
 		function.apply(emitter).subscribe(
-				message -> responseObserver.onNext(
-						MessageConversionUtils.toGrpc(output.payloadToBytes(message))),
+				message -> responseObserver
+						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
 				t -> responseObserver
 						.onError(ExceptionConverter.createStatus(t).asException()),
 				responseObserver::onCompleted);
@@ -93,7 +118,7 @@ public class JavaFunctionInvokerServer
 			public void onNext(
 					io.projectriff.grpc.function.FunctionProtos.Message message) {
 				emitter.onNext(
-						input.payloadFromBytes(MessageConversionUtils.fromGrpc(message)));
+						payloadFromBytes(MessageConversionUtils.fromGrpc(message)));
 			}
 
 			@Override
@@ -107,6 +132,53 @@ public class JavaFunctionInvokerServer
 			}
 		};
 
+	}
+
+	private Message<byte[]> payloadToBytes(Message<?> message) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Outgoing: " + message);
+		}
+		return MessageBuilder.createMessage(toBytes(message.getPayload()),
+				message.getHeaders());
+	}
+
+	private byte[] toBytes(Object payload) {
+		if (payload instanceof byte[]) {
+			return (byte[]) payload;
+		}
+		if (CharSequence.class.isAssignableFrom(outputType)) {
+			return payload.toString().getBytes();
+		}
+		try {
+			return mapper.toJson(payload).getBytes();
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Cannot convert from " + outputType, e);
+		}
+	}
+
+	private Message<?> payloadFromBytes(Message<byte[]> message) {
+		Message<Object> result = MessageBuilder
+				.createMessage(fromBytes(message.getPayload()), message.getHeaders());
+		if (logger.isDebugEnabled()) {
+			logger.debug("Incoming: " + result);
+		}
+		return result;
+	}
+
+	private Object fromBytes(byte[] payload) {
+		if (byte[].class.isAssignableFrom(inputType)) {
+			return payload;
+		}
+		if (CharSequence.class.isAssignableFrom(inputType)) {
+			return new String(payload);
+		}
+		try {
+			return mapper.fromJson(new String(payload), inputType);
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Cannot convert to " + inputType, e);
+		}
 	}
 
 }

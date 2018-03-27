@@ -16,9 +16,7 @@
 package io.projectriff.invoker;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
 
@@ -77,37 +75,16 @@ public class GrpcConfiguration {
 		try {
 			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
 					functions.getFunctionName());
-			Supplier<Flux<?>> supplier = null;
-			Consumer<Flux<?>> consumer = null;
 			if (function == null) {
-				supplier = catalog.lookup(Supplier.class, functions.getFunctionName());
-				if (supplier == null) {
-					consumer = catalog.lookup(Consumer.class,
-							functions.getFunctionName());
-					if (consumer == null) {
-						throw new IllegalStateException(
-								"No such function: " + functions.getFunctionName());
-					}
-				}
+				throw new IllegalStateException(
+						"No such function: " + functions.getFunctionName());
 			}
-			ServerBuilder<?> builder = ServerBuilder.forPort(this.port);
-			if (function != null) {
-				builder = builder.addService(new JavaFunctionInvokerServer(function,
-						this.mapper, inspector.getInputType(function),
-						inspector.getOutputType(function),
-						inspector.isMessage(function)));
-			}
-			else if (supplier != null) {
-				builder = builder.addService(new JavaSupplierInvokerServer(supplier,
-						this.mapper, inspector.getOutputType(supplier),
-						inspector.isMessage(supplier)));
-			}
-			else {
-				builder = builder.addService(new JavaConsumerInvokerServer(consumer,
-						this.mapper, inspector.getInputType(consumer),
-						inspector.isMessage(consumer)));
-			}
-			this.server = builder.build();
+			this.server = ServerBuilder.forPort(this.port)
+					.addService(new JavaFunctionInvokerServer(function, this.mapper,
+							inspector.getInputType(function),
+							inspector.getOutputType(function),
+							inspector.isMessage(function)))
+					.build();
 			this.server.start();
 		}
 		catch (IOException e) {
