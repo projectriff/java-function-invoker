@@ -31,8 +31,6 @@ public class VoteStreamProcessor
 
 	@Override
 	public Flux<Map<String, Object>> apply(Flux<String> words) {
-		// We're going to use it twice so share it to avoid disappointment
-		words = words.share();
 		return Flux.merge(intervals(words), windows(words));
 	}
 

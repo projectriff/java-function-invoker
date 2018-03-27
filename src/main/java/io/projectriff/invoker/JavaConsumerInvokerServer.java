@@ -25,8 +25,8 @@ import com.google.gson.Gson;
 
 import org.springframework.messaging.Message;
 
+import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.UnicastProcessor;
 
 /**
  * @author Eric Bottard
@@ -50,7 +50,7 @@ public class JavaConsumerInvokerServer
 	public StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> call(
 			StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message> responseObserver) {
 
-		UnicastProcessor<Message<?>> emitter = UnicastProcessor.<Message<?>>create();
+		EmitterProcessor<Message<?>> emitter = EmitterProcessor.<Message<?>>create();
 		function.accept(emitter.doOnComplete(responseObserver::onCompleted)
 				.doOnError(t -> responseObserver
 						.onError(ExceptionConverter.createStatus(t).asException())));

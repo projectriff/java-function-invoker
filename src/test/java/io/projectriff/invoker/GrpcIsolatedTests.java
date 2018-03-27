@@ -88,16 +88,6 @@ public class GrpcIsolatedTests {
 	}
 
 	@Test
-	// @Ignore("Function that blocks really gums things up")
-	public void weirdFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
-						+ "?handler=io.projectriff.functions.Weird");
-		List<String> result = client.send("start");
-		assertThat(result).isEmpty();
-	}
-
-	@Test
 	public void fluxJson() throws Exception {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
