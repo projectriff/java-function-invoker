@@ -16,7 +16,9 @@
 package io.projectriff.invoker;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
 
@@ -27,11 +29,15 @@ import com.google.gson.Gson;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.function.context.FunctionType;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
+import org.springframework.cloud.function.core.FluxConsumer;
+import org.springframework.cloud.function.core.FluxSupplier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -73,17 +79,26 @@ public class GrpcConfiguration {
 	@EventListener(ContextRefreshedEvent.class)
 	public void start() {
 		try {
-			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
-					functions.getName());
+			Object function = catalog.lookup(Function.class, functions.getName());
 			if (function == null) {
-				throw new IllegalStateException(
-						"No such function: " + functions.getName());
+				function = catalog.lookup(Consumer.class, functions.getName());
+				if (function == null) {
+					function = catalog.lookup(Supplier.class, functions.getName());
+					if (function == null) {
+						throw new IllegalStateException(
+								"No such function: " + functions.getName());
+					}
+				}
 			}
 			this.server = ServerBuilder.forPort(this.port)
-					.addService(new JavaFunctionInvokerServer(function, this.mapper,
-							inspector.getInputType(function),
-							inspector.getOutputType(function),
-							inspector.isMessage(function)))
+					.addService(
+							new JavaFunctionInvokerServer(
+									function(function,
+											inspector.getRegistration(function)
+													.getType()),
+									this.mapper, inspector.getInputType(function),
+									inspector.getOutputType(function),
+									inspector.isMessage(function)))
 					.build();
 			this.server.start();
 		}
@@ -115,6 +130,102 @@ public class GrpcConfiguration {
 		// This shouldn't be necessary, and doesn't seem to help anyway. How to stop the
 		// class loader from being destroyed before the server has stopped?
 		awaitTermination();
+	}
+
+	/**
+	 * If a Supplier or Consumer has been registered (as opposed to a Function), convert
+	 * it to a Function in such a way that it will discard inputs or outputs, depending on
+	 * its type.
+	 */
+	private Function<Flux<?>, Flux<?>> function(Object result, FunctionType type) {
+		if (result instanceof Supplier) {
+			if (type == null) {
+				type = FunctionType.of(result.getClass());
+			}
+			// If we don't supply a Flux already, let's make sure we get one
+			if (!type.isWrapper() && !(result instanceof FluxSupplier)) {
+				result = new FluxSupplier<>((Supplier<?>) result);
+			}
+			// Adapt the supplier of Flux to be a Function
+			@SuppressWarnings("unchecked")
+			Supplier<Publisher<?>> supplier = (Supplier<Publisher<?>>) result;
+			result = new SupplierAdapter(supplier);
+		}
+		if (result instanceof Consumer) {
+			if (type == null) {
+				type = FunctionType.of(result.getClass());
+			}
+			// If we don't consume a Flux already, let's make sure we can
+			if (!type.isWrapper()) {
+				FluxConsumer<?> function = null;
+				if (result instanceof FluxConsumer) {
+					function = (FluxConsumer<?>) result;
+				}
+				else {
+					function = new FluxConsumer<>((Consumer<?>) result);
+				}
+				result = new FluxConsumerAdapter(function);
+			}
+			else {
+				// Only get to here if user supplied a Consumer<Flux<?>>
+				result = new ConsumerAdapter((Consumer<?>) result);
+			}
+		}
+		@SuppressWarnings("unchecked")
+		Function<Flux<?>, Flux<?>> output = (Function<Flux<?>, Flux<?>>) result;
+		return output;
+	}
+
+	private static final class ConsumerAdapter
+			implements Function<Flux<Object>, Flux<Object>> {
+
+		private Consumer<Flux<Object>> result;
+
+		@SuppressWarnings("unchecked")
+		public ConsumerAdapter(Consumer<?> result) {
+			this.result = (Consumer<Flux<Object>>) result;
+		}
+
+		@Override
+		public Flux<Object> apply(Flux<Object> t) {
+			Flux<Object> input = t.share();
+			result.accept(input);
+			return Flux.from(input.then());
+		}
+
+	}
+
+	private static final class SupplierAdapter
+			implements Function<Flux<Object>, Flux<Object>> {
+
+		private Supplier<Publisher<?>> result;
+
+		public SupplierAdapter(Supplier<Publisher<?>> result) {
+			this.result = result;
+		}
+
+		@Override
+		public Flux<Object> apply(Flux<Object> input) {
+			return Flux.from(result.get());
+		}
+
+	}
+
+	private static final class FluxConsumerAdapter
+			implements Function<Flux<Object>, Flux<Object>> {
+
+		private FluxConsumer<Object> result;
+
+		@SuppressWarnings("unchecked")
+		public FluxConsumerAdapter(FluxConsumer<?> result) {
+			this.result = (FluxConsumer<Object>) result;
+		}
+
+		@Override
+		public Flux<Object> apply(Flux<Object> t) {
+			return Flux.from(result.apply(t).then());
+		}
+
 	}
 
 }

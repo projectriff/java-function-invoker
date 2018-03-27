@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +38,6 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -58,15 +56,12 @@ import org.springframework.cloud.function.context.FunctionRegistration;
 import org.springframework.cloud.function.context.FunctionRegistry;
 import org.springframework.cloud.function.context.FunctionType;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
-import org.springframework.cloud.function.core.FluxSupplier;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StreamUtils;
-
-import reactor.core.publisher.Flux;
 
 /**
  * Sets up infrastructure capable of instantiating a "functional" bean (whether Supplier,
@@ -291,31 +286,10 @@ public class FunctionConfiguration {
 			}
 		}
 
-		/**
-		 * If a Supplier has been registered (as opposed to a Function), convert it to a
-		 * Function in such a way that it will send messages to the output stream as soon
-		 * as the rpc call starts, discarding inputs.
-		 */
-		private Object function(FunctionRegistration<Object> reg) {
-			Object result = reg.getTarget();
-			if (result instanceof Supplier) {
-				FunctionType type = reg.getType();
-				if (type == null) {
-					type = FunctionType.of(result.getClass());
-				}
-				// If we don't supply a Flux already, let's make sure we get one
-				if (!type.isWrapper()) {
-					result = new FluxSupplier<>((Supplier<?>) result);
-				}
-				// Adapt the supplier of Flux to be a Function
-				@SuppressWarnings("unchecked")
-				Supplier<Publisher<?>> supplier = (Supplier<Publisher<?>>) result;
-				return new SupplierAdapter(supplier);
-			}
-			return result;
-		}
-
 		public void register(Object bean) {
+			if (bean == null) {
+				return;
+			}
 			FunctionRegistration<Object> registration = new FunctionRegistration<Object>(
 					bean).names("function" + counter.getAndIncrement());
 			if (this.runner != null) {
@@ -340,7 +314,10 @@ public class FunctionConfiguration {
 					registration.type(type.getType());
 				}
 			}
-			registration.target(function(registration));
+			else {
+				registration.type(FunctionType.of(bean.getClass()).getType());
+			}
+			registration.target(bean);
 			registry.register(registration);
 		}
 
@@ -348,22 +325,6 @@ public class FunctionConfiguration {
 			if (this.runner != null) {
 				this.runner.close();
 			}
-		}
-
-	}
-
-	private static final class SupplierAdapter
-			implements Function<Flux<Object>, Flux<Object>> {
-
-		private Supplier<Publisher<?>> result;
-
-		public SupplierAdapter(Supplier<Publisher<?>> result) {
-			this.result = result;
-		}
-
-		@Override
-		public Flux<Object> apply(Flux<Object> t) {
-			return t.ignoreElements().mergeWith(result.get());
 		}
 
 	}

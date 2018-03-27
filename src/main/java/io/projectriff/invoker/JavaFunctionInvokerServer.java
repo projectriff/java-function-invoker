@@ -109,14 +109,22 @@ public class JavaFunctionInvokerServer
 		UnicastProcessor<Message<?>> emitter = UnicastProcessor.<Message<?>>create();
 		GuardedFlux flux = new GuardedFlux(emitter);
 		Flux<Message<?>> result = function.apply(flux);
-		flux.setSubscribed(true);
+		// Set the subscription guard after the user function is applied.
+		flux.guard();
+
 		result.subscribe(
 				message -> responseObserver
 						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
 				t -> {
+					responseObserver.onError(t);
 					throw new IllegalStateException(
 							ExceptionConverter.createStatus(t).asException());
-				}, responseObserver::onCompleted);
+				}, () -> {
+					// Make sure the emitter is disposed (should work even if it already
+					// was since it's idempotent)
+					emitter.dispose();
+					responseObserver.onCompleted();
+				});
 
 		return new StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message>() {
 
@@ -188,6 +196,12 @@ public class JavaFunctionInvokerServer
 
 	}
 
+	/**
+	 * Convenience class guarding a flux and preventing it from being subscribed once a
+	 * flag is set. Users should not subscribe to the input fluxes of their functions so
+	 * this flag will protect us by throwing an exception when a subscription is detected.
+	 *
+	 */
 	private final static class GuardedFlux extends Flux<Message<?>> {
 		private boolean subscribed;
 		private final Flux<Message<?>> emitter;
@@ -207,8 +221,8 @@ public class JavaFunctionInvokerServer
 			}
 		}
 
-		public void setSubscribed(boolean subscribed) {
-			this.subscribed = subscribed;
+		public void guard() {
+			this.subscribed = true;
 		}
 	}
 
