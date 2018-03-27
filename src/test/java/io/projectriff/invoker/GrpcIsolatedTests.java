@@ -95,6 +95,16 @@ public class GrpcIsolatedTests {
 						+ "?handler=io.projectriff.functions.Weird");
 		List<String> result = client.send("start");
 		assertThat(result).isEmpty();
+
+	}
+
+	@Test
+	public void supplier() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.NumberEmitter");
+		List<String> result = client.send();
+		assertThat(result).contains("1");
 	}
 
 	@Test
@@ -169,7 +179,7 @@ public class GrpcIsolatedTests {
 		assertThat(result).contains("10");
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = Exception.class)
 	public void nonExistentFunctionWithMain() throws Exception {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=app:classpath?" + "handler=notThere&"

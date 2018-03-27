@@ -18,7 +18,6 @@ package io.projectriff.invoker;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +35,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+
+import reactor.core.publisher.Flux;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { FunctionConfiguration.class, FunctionProperties.class,
@@ -68,8 +69,9 @@ public abstract class FunctionConfigurationTests {
 
 		@Test
 		public void testSupplier() {
-			Supplier<Integer> function = catalog.lookup(Supplier.class, "function0");
-			assertThat(function.get(), is(1));
+			Function<Flux<?>, Flux<Integer>> function = catalog.lookup(Function.class,
+					"function0");
+			assertThat(function.apply(Flux.empty()).blockFirst(), is(1));
 		}
 
 		@Test
