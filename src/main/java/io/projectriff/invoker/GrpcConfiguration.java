@@ -76,17 +76,17 @@ public class GrpcConfiguration {
 	public void start() {
 		try {
 			Function<Flux<?>, Flux<?>> function = catalog.lookup(Function.class,
-					functions.getName());
+					functions.getFunctionName());
 			Supplier<Flux<?>> supplier = null;
 			Consumer<Flux<?>> consumer = null;
 			if (function == null) {
-				supplier = catalog.lookup(Supplier.class, functions.getName());
+				supplier = catalog.lookup(Supplier.class, functions.getFunctionName());
 				if (supplier == null) {
 					consumer = catalog.lookup(Consumer.class,
-							functions.getName());
+							functions.getFunctionName());
 					if (consumer == null) {
 						throw new IllegalStateException(
-								"No such function: " + functions.getName());
+								"No such function: " + functions.getFunctionName());
 					}
 				}
 			}

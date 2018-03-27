@@ -125,7 +125,7 @@ public class FunctionConfiguration {
 
 		try {
 			this.creator = new BeanCreator(expand(urls));
-			this.creator.run(properties.getMain());
+			this.creator.run(properties.getMainClassName());
 			Arrays.stream(properties.getClassName()).map(this.creator::create)
 					.sequential().forEach(this.creator::register);
 		}

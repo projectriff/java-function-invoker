@@ -46,9 +46,9 @@ public class FunctionProperties {
 	private String[] jarLocation;
 	private String[] className;
 
-	private String name;
+	private String functionName;
 
-	private String main;
+	private String mainClassName;
 
 	public String getUri() {
 		return uri;
@@ -78,28 +78,24 @@ public class FunctionProperties {
 			String className = m.group(2);
 			String rest = m.group(3);
 			if (rest != null && rest.startsWith("main=")) {
-				this.main = rest.substring("main=".length());
+				this.mainClassName = rest.substring("main=".length());
 			}
 
 			this.jarLocation = StringUtils.commaDelimitedListToStringArray(jarLocation);
 			this.className = StringUtils.commaDelimitedListToStringArray(className);
 		}
-		if (this.className != null && this.name == null) {
-			this.name = StringUtils
+		if (this.className != null) {
+			this.functionName = StringUtils
 					.arrayToCommaDelimitedString(IntStream.range(0, this.className.length)
 							.sequential().mapToObj(i -> "function" + i).toArray());
 		}
 	}
 
-	public String getName() {
-		return this.name;
+	public String getFunctionName() {
+		return this.functionName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getMain() {
-		return this.main;
+	public String getMainClassName() {
+		return this.mainClassName;
 	}
 }

@@ -33,6 +33,6 @@ public class JavaFunctionInvokerController {
 
 	@PostMapping("/")
 	public String invoke() {
-		return "forward:/" + functions.getName();
+		return "forward:/" + functions.getFunctionName();
 	}
 }
