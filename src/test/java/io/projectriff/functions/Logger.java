@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.projectriff.functions;
 
-package io.projectriff.invoker;
+import java.util.function.Consumer;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
+import reactor.core.publisher.Flux;
 
 /**
- * @author Eric Bottard
- * @author Mark Fisher
  * @author Dave Syer
+ *
  */
-@Controller
-public class JavaFunctionInvokerController {
+public class Logger implements Consumer<Flux<String>> {
 
-	@Autowired
-	private FunctionProperties functions;
-
-	@PostMapping("/")
-	public String invoke() {
-		return "forward:/" + functions.getName();
+	@Override
+	public void accept(Flux<String> input) {
+		input.map(value -> "Hello " + value).subscribe(System.out::println);
 	}
+
 }
