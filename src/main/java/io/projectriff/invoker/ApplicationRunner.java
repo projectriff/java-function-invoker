@@ -125,9 +125,14 @@ public class ApplicationRunner {
 			}
 			Expression parsed = new SpelExpressionParser()
 					.parseExpression("context.getBeansOfType(T(" + name + "))");
-			@SuppressWarnings("unchecked")
-			Map<String, Object> beans = (Map<String, Object>) parsed.getValue(this.app);
-			return !beans.isEmpty();
+			try {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> beans = (Map<String, Object>) parsed
+						.getValue(this.app);
+				return !beans.isEmpty();
+			}
+			catch (Exception e) {
+			}
 		}
 		return false;
 	}
