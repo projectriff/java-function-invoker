@@ -73,7 +73,7 @@ public class JavaFunctionInvokerServer
 	private Message<?> retrieveHeaders(AtomicReference<Map<String, Object>> headers,
 			Message<?> message) {
 		Map<String, Object> map = headers.getAndSet(Collections.emptyMap());
-		if (map.isEmpty()) {
+		if (map == null || map.isEmpty()) {
 			return message;
 		}
 		return MessageBuilder.fromMessage(message).copyHeadersIfAbsent(map).build();
@@ -113,9 +113,10 @@ public class JavaFunctionInvokerServer
 		result.subscribe(
 				message -> responseObserver
 						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
-				t -> responseObserver
-						.onError(ExceptionConverter.createStatus(t).asException()),
-				responseObserver::onCompleted);
+				t -> {
+					throw new IllegalStateException(
+							ExceptionConverter.createStatus(t).asException());
+				}, responseObserver::onCompleted);
 
 		return new StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message>() {
 

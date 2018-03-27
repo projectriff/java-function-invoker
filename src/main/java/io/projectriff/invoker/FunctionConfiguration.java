@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +39,7 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -56,12 +58,15 @@ import org.springframework.cloud.function.context.FunctionRegistration;
 import org.springframework.cloud.function.context.FunctionRegistry;
 import org.springframework.cloud.function.context.FunctionType;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
+import org.springframework.cloud.function.core.FluxSupplier;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StreamUtils;
+
+import reactor.core.publisher.Flux;
 
 /**
  * Sets up infrastructure capable of instantiating a "functional" bean (whether Supplier,
@@ -141,7 +146,7 @@ public class FunctionConfiguration {
 		}
 		return result.toArray(new URL[0]);
 	}
-	
+
 	private List<URL> expand(URL url) {
 		if (!"file".equals(url.getProtocol())) {
 			return Collections.singletonList(url);
@@ -265,16 +270,49 @@ public class FunctionConfiguration {
 					.overrideThreadContextClassLoader(functionClassLoader);
 			AutowireCapableBeanFactory factory = context.getAutowireCapableBeanFactory();
 			try {
+				Object result = null;
 				if (this.runner != null) {
-					return this.runner.getBean(type);
+					result = this.runner.getBean(type);
 				}
-				logger.info("No main class provided. Instantiating: " + type);
-				return factory.createBean(
-						ClassUtils.resolveClassName(type, functionClassLoader));
+				if (result == null) {
+					logger.info("No main class provided. Instantiating: " + type);
+					if (ClassUtils.isPresent(type, functionClassLoader)) {
+						result = factory.createBean(
+								ClassUtils.resolveClassName(type, functionClassLoader));
+					}
+				}
+				if (result != null) {
+					return result;
+				}
+				throw new IllegalStateException("Cannot create bean for: " + type);
 			}
 			finally {
 				ClassUtils.overrideThreadContextClassLoader(contextClassLoader);
 			}
+		}
+
+		/**
+		 * If a Supplier has been registered (as opposed to a Function), convert it to a
+		 * Function in such a way that it will send messages to the output stream as soon
+		 * as the rpc call starts, discarding inputs.
+		 */
+		private Object function(FunctionRegistration<Object> reg) {
+			Object result = reg.getTarget();
+			if (result instanceof Supplier) {
+				FunctionType type = reg.getType();
+				if (type == null) {
+					type = FunctionType.of(result.getClass());
+				}
+				// If we don't supply a Flux already, let's make sure we get one
+				if (!type.isWrapper()) {
+					result = new FluxSupplier<>((Supplier<?>) result);
+				}
+				// Adapt the supplier of Flux to be a Function
+				@SuppressWarnings("unchecked")
+				Supplier<Publisher<?>> supplier = (Supplier<Publisher<?>>) result;
+				return new SupplierAdapter(supplier);
+			}
+			return result;
 		}
 
 		public void register(Object bean) {
@@ -302,6 +340,7 @@ public class FunctionConfiguration {
 					registration.type(type.getType());
 				}
 			}
+			registration.target(function(registration));
 			registry.register(registration);
 		}
 
@@ -309,6 +348,22 @@ public class FunctionConfiguration {
 			if (this.runner != null) {
 				this.runner.close();
 			}
+		}
+
+	}
+
+	private static final class SupplierAdapter
+			implements Function<Flux<Object>, Flux<Object>> {
+
+		private Supplier<Publisher<?>> result;
+
+		public SupplierAdapter(Supplier<Publisher<?>> result) {
+			this.result = result;
+		}
+
+		@Override
+		public Flux<Object> apply(Flux<Object> t) {
+			return t.ignoreElements().mergeWith(result.get());
 		}
 
 	}
