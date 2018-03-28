@@ -10,6 +10,7 @@ spec:
   - "target/*.jar"
   properties:
     handler:
+      default: "functions.{{ .TitleCase .FunctionName }}"
       description: the fully qualified class name of the function handler
     function:
       protocol: grpc
