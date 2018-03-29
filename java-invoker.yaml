@@ -28,6 +28,6 @@ spec:
     
     For example, from a maven project directory named 'greeter', type:
     
-        riff {{.Command}} java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
+        riff {{.Command}} -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
     
     to {{.Result}}.
