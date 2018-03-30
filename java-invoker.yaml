@@ -8,11 +8,11 @@ spec:
   matchers:
   - "*.jar"
   - "target/*.jar"
-  properties:
-    handler:
-      default: "functions.{{ .TitleCase .FunctionName }}"
-      description: the fully qualified class name or bean name of the function handler
-    function:
+  handler:
+    default: "functions.{{ .TitleCase .FunctionName }}"
+    description: the fully qualified class name or bean name of the function handler
+  functionTemplate:
+    spec:
       protocol: grpc
   files:
   - path: Dockerfile
