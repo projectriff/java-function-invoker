@@ -1,0 +1,41 @@
+= uppercase
+
+[horizontal]
+*Invoker*:: java
+*Function*:: link:src/main/java/functions/Uppercase.java[Uppercase.java]
+*Input*:: words
+
+=== prerequisites
+
+1. riff is deployed
+2. the `riff` CLI is on your PATH
+3. the java invoker is installed
+
+    riff invokers apply -f https://github.com/projectriff/java-function-invoker/raw/master/java-invoker.yaml
+
+4. the working directory is `samples/uppercase`
+
+=== compile the Java code and build the JAR
+
+```
+./mvnw clean package
+```
+
+=== create the function and its input topic
+
+```
+riff create java --input words --handler functions.Uppercase
+```
+
+=== publish a message and wait for a reply
+
+In a terminal window:
+```
+riff publish --input words --data hello --reply
+```
+
+=== delete the function and its input topic
+
+```
+riff delete --all
+```
