@@ -39,6 +39,9 @@ public class MessageConversionUtils {
 		MessageBuilder<byte[]> builder = MessageBuilder
 				.withPayload(input.getPayload().toByteArray());
 		for (Entry<String, HeaderValue> entry : input.getHeadersMap().entrySet()) {
+			if (MessageHeaders.TIMESTAMP.equals(entry.getKey())) {
+				continue;
+			}
 			HeaderValue header = entry.getValue();
 			if (header.getValuesCount() > 0) {
 				Object value;
