@@ -27,7 +27,7 @@ public class Logger implements Consumer<Flux<String>> {
 
 	@Override
 	public void accept(Flux<String> input) {
-		input.map(value -> "Hello " + value).subscribe(System.out::println);
+		input.map(value -> "Hello " + value).doOnNext(System.out::println);
 	}
 
 }

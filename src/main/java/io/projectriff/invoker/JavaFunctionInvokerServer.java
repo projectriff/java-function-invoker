@@ -50,11 +50,14 @@ public class JavaFunctionInvokerServer
 	private final Class<?> inputType;
 	private final Class<?> outputType;
 	private final Gson mapper;
+	private Runnable callback;
 
 	private static final Log logger = LogFactory.getLog(JavaFunctionInvokerServer.class);
 
-	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function, Gson mapper,
-			Class<?> inputType, Class<?> outputType, boolean isMessage) {
+	public JavaFunctionInvokerServer(Function<Flux<?>, Flux<?>> function,
+			Runnable callback, Gson mapper, Class<?> inputType, Class<?> outputType,
+			boolean isMessage) {
+		this.callback = callback;
 		this.mapper = mapper;
 		this.inputType = inputType;
 		this.outputType = outputType;
@@ -122,8 +125,11 @@ public class JavaFunctionInvokerServer
 				}, () -> {
 					// Make sure the emitter is disposed (should work even if it already
 					// was since it's idempotent)
-					emitter.dispose();
+					if (!emitter.isDisposed()) {
+						emitter.dispose();
+					}
 					responseObserver.onCompleted();
+					this.callback.run();
 				});
 
 		return new StreamObserver<io.projectriff.grpc.function.FunctionProtos.Message>() {

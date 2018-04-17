@@ -152,6 +152,15 @@ public class ApplicationRunner {
 		return parsed.getValue(context);
 	}
 
+	public boolean isRunning() {
+		if (this.app == null) {
+			return false;
+		}
+		Expression parsed = new SpelExpressionParser()
+				.parseExpression("context.isRunning()");
+		return parsed.getValue(this.app, Boolean.class);
+	}
+
 	@PreDestroy
 	public void close() {
 		closeContext();

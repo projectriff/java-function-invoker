@@ -38,6 +38,8 @@ import org.springframework.cloud.function.context.FunctionType;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.cloud.function.core.FluxConsumer;
 import org.springframework.cloud.function.core.FluxSupplier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -56,6 +58,7 @@ public class GrpcConfiguration {
 	private static final Log logger = LogFactory.getLog(GrpcConfiguration.class);
 	private Server server;
 	private int port = 10382;
+	private boolean exitOnComplete;
 
 	@Autowired
 	private Gson mapper;
@@ -65,6 +68,8 @@ public class GrpcConfiguration {
 	private FunctionInspector inspector;
 	@Autowired
 	private FunctionCatalog catalog;
+	@Autowired
+	private ConfigurableApplicationContext context;
 
 	public int getPort() {
 		return port;
@@ -73,6 +78,14 @@ public class GrpcConfiguration {
 	public void setPort(int port) {
 		port = port > 0 ? port : SocketUtils.findAvailableTcpPort();
 		this.port = port;
+	}
+
+	public boolean isExitOnComplete() {
+		return exitOnComplete;
+	}
+
+	public void setExitOnComplete(boolean exitOnComplete) {
+		this.exitOnComplete = exitOnComplete;
 	}
 
 	/** Start serving requests. */
@@ -96,7 +109,8 @@ public class GrpcConfiguration {
 									function(function,
 											inspector.getRegistration(function)
 													.getType()),
-									this.mapper, inspector.getInputType(function),
+									this::maybeClose, this.mapper,
+									inspector.getInputType(function),
 									inspector.getOutputType(function),
 									inspector.isMessage(function)))
 					.build();
@@ -176,6 +190,19 @@ public class GrpcConfiguration {
 		return output;
 	}
 
+	private void maybeClose() {
+		if (this.exitOnComplete) {
+			ApplicationContext context = this.context;
+			while (context instanceof ConfigurableApplicationContext) {
+				ConfigurableApplicationContext closeable = (ConfigurableApplicationContext) context;
+				if (closeable.isRunning()) {
+					closeable.close();
+				}
+				context = context.getParent();
+			}
+		}
+	}
+
 	private static final class ConsumerAdapter
 			implements Function<Flux<Object>, Flux<Object>> {
 
@@ -204,9 +231,10 @@ public class GrpcConfiguration {
 			this.result = result;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Flux<Object> apply(Flux<Object> input) {
-			return Flux.from(result.get());
+			return (Flux<Object>) Flux.from(result.get());
 		}
 
 	}

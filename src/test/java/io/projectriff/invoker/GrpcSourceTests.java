@@ -65,5 +65,18 @@ public class GrpcSourceTests {
 		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
 				.getField(this.runner, "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.Words")).isFalse();
+		assertThat(runner.isRunning()).isTrue();
+	}
+
+	@Test
+	public void fluxSupplierCloses() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port, "--grpc.exitOnComplete=true",
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Words");
+		List<String> result = client.send();
+		assertThat(result).contains("foo");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
+				.getField(this.runner, "runner");
+		assertThat(runner.isRunning()).isFalse();
 	}
 }

@@ -65,5 +65,18 @@ public class GrpcSinkTests {
 		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
 				.getField(this.runner, "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.Logger")).isFalse();
+		assertThat(runner.isRunning()).isTrue();
+	}
+
+	@Test
+	public void fluxConsumerCloses() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port, "--grpc.exitOnComplete=true",
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Logger");
+		List<String> result = client.send("foo");
+		assertThat(result).isEmpty();
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
+				.getField(this.runner, "runner");
+		assertThat(runner.isRunning()).isFalse();
 	}
 }
