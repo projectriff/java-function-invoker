@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.projectriff.grpc.function.MessageFunctionGrpc;
 
@@ -119,9 +120,16 @@ public class JavaFunctionInvokerServer
 				message -> responseObserver
 						.onNext(MessageConversionUtils.toGrpc(payloadToBytes(message))),
 				t -> {
+					if (t instanceof StatusRuntimeException) {
+						// Not particularly exceptional.
+						logger.info("RPC ending: " + t.getClass().getName() + " ("
+								+ t.getMessage() + ")");
+					}
+					else {
+						t = ExceptionConverter.createStatus(t).asRuntimeException();
+						logger.error("RPC ending", t);
+					}
 					responseObserver.onError(t);
-					throw new IllegalStateException(
-							ExceptionConverter.createStatus(t).asException());
 				}, () -> {
 					// Make sure the emitter is disposed (should work even if it already
 					// was since it's idempotent)

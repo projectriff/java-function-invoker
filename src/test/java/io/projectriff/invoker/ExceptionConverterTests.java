@@ -6,6 +6,8 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeoutException;
 
 import io.grpc.Status;
+import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 
 import org.junit.Test;
 
@@ -14,6 +16,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ExceptionConverterTests {
 
 	private static final String TEST_MESSAGE = "test message";
+
+	@Test
+	public void statusRuntime() {
+		checkStatus(new StatusRuntimeException(Status.CANCELLED), Status.Code.CANCELLED,
+				null);
+	}
+
+	@Test
+	public void status() {
+		checkStatus(new StatusException(Status.CANCELLED), Status.Code.CANCELLED, null);
+	}
 
 	@Test
 	public void cancelled() {
@@ -107,10 +120,17 @@ public class ExceptionConverterTests {
 	}
 
 	private void checkStatus(Throwable cause, Status.Code expectedCode) {
+		checkStatus(cause, expectedCode, TEST_MESSAGE);
+	}
+
+	private void checkStatus(Throwable cause, Status.Code expectedCode,
+			String description) {
 		Status s = ExceptionConverter.createStatus(cause);
 		assertThat(s.getCode()).isEqualTo(expectedCode);
-		assertThat(s.getDescription()).isEqualTo(TEST_MESSAGE);
-		assertThat(s.getCause()).isEqualTo(cause);
+		assertThat(s.getDescription()).isEqualTo(description);
+		if (s.getCause() != null) {
+			assertThat(s.getCause()).isEqualTo(cause);
+		}
 	}
 
 	@SuppressWarnings("serial")
