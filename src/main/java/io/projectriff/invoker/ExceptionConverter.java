@@ -6,12 +6,20 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeoutException;
 
 import io.grpc.Status;
+import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 
 /**
  * Utility class for converting exceptions to gRPC status values.
  */
 final class ExceptionConverter {
 	static Status createStatus(Throwable t) {
+		if (t instanceof StatusRuntimeException) {
+			return ((StatusRuntimeException) t).getStatus();
+		}
+		if (t instanceof StatusException) {
+			return ((StatusException) t).getStatus();
+		}
 		return Status.fromCode(determineCode(t)).withDescription(t.getMessage())
 				.withCause(t);
 	}
