@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.FunctionType;
@@ -53,12 +54,23 @@ import reactor.core.publisher.Flux;
  */
 @Configuration
 @ConfigurationProperties("grpc")
+@ConditionalOnProperty(prefix = "grpc", name = "enabled", matchIfMissing = true)
 public class GrpcConfiguration {
 
 	private static final Log logger = LogFactory.getLog(GrpcConfiguration.class);
 	private Server server;
+	/**
+	 * The port to listen on for gRPC connections.
+	 */
 	private int port = 10382;
+	/**
+	 * Flag to indicate that the application should shutdown after a successful gRPC call.
+	 */
 	private boolean exitOnComplete;
+	/**
+	 * Flag to enable or disable the gRPC server.
+	 */
+	private boolean enabled = true;
 
 	@Autowired
 	private Gson mapper;
@@ -86,6 +98,14 @@ public class GrpcConfiguration {
 
 	public void setExitOnComplete(boolean exitOnComplete) {
 		this.exitOnComplete = exitOnComplete;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	/** Start serving requests. */
