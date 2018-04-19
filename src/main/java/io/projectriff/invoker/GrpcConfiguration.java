@@ -121,16 +121,23 @@ public class GrpcConfiguration {
 					.format("gRPC server failed to start listening on port %d", port), e);
 		}
 		logger.info("Server started, listening on " + port);
+		awaitTermination();
 	}
 
 	public void awaitTermination() {
 		if (server != null) {
-			try {
-				server.awaitTermination();
-			}
-			catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
+			Thread thread = new Thread(() -> {
+				try {
+					logger.info("Waiting for server to terminate");
+					server.awaitTermination();
+				}
+				catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+			thread.setName("grpcServerWait");
+			thread.setDaemon(false);
+			thread.start();
 		}
 	}
 

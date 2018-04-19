@@ -49,22 +49,14 @@ public class JavaFunctionInvokerApplication {
 		if (JavaFunctionInvokerApplication.isolated(args)) {
 			JavaFunctionInvokerApplication application = new JavaFunctionInvokerApplication();
 			application.run(args);
-			application.awaitTermination();
 		}
 		else {
-			SpringApplication.run(JavaFunctionInvokerApplication.class, args)
-					.getBean(GrpcConfiguration.class).awaitTermination();
+			SpringApplication.run(JavaFunctionInvokerApplication.class, args);
 		}
 	}
 
 	public void run(String... args) {
 		runner().run(args);
-	}
-
-	private void awaitTermination() {
-		if (this.runner != null) {
-			this.runner.awaitTermination();
-		}
 	}
 
 	@PreDestroy
