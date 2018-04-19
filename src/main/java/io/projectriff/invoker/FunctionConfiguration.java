@@ -299,17 +299,20 @@ public class FunctionConfiguration {
 					Class<?> input = (Class<?>) this.runner.evaluate(
 							"getInputType(#function)", inspector, "function", bean);
 					FunctionType type = FunctionType.from(input);
-					Class<?> output = (Class<?>) this.runner.evaluate(
-							"getOutputType(#function)", inspector, "function", bean);
+					Class<?> output = findType("getOutputType", inspector, bean);
 					type = type.to(output);
 					if (((Boolean) this.runner.evaluate("isMessage(#function)", inspector,
 							"function", bean))) {
 						type = type.message();
 					}
-					Class<?> wrapper = (Class<?>) this.runner.evaluate(
-							"getInputWrapper(#function)", inspector, "function", bean);
-					if (FunctionType.isWrapper(wrapper)) {
-						type = type.wrap(wrapper);
+					Class<?> inputWrapper = findType("getInputWrapper", inspector, bean);
+					if (FunctionType.isWrapper(inputWrapper)) {
+						type = type.wrap(inputWrapper);
+					}
+					Class<?> outputWrapper = findType("getOutputWrapper", inspector,
+							bean);
+					if (FunctionType.isWrapper(outputWrapper)) {
+						type = type.wrap(outputWrapper);
 					}
 					registration.type(type.getType());
 				}
@@ -319,6 +322,11 @@ public class FunctionConfiguration {
 			}
 			registration.target(bean);
 			registry.register(registration);
+		}
+
+		private Class<?> findType(String method, Object inspector, Object bean) {
+			return (Class<?>) this.runner.evaluate(method + "(#function)", inspector,
+					"function", bean);
 		}
 
 		public void close() {

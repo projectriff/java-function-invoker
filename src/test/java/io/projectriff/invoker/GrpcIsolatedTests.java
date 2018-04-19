@@ -108,6 +108,15 @@ public class GrpcIsolatedTests {
 	}
 
 	@Test
+	public void fluxSupplier() throws Exception {
+		runner.run("--server.port=0", "--grpc.port=" + port,
+				"--function.uri=file:target/test-classes"
+						+ "?handler=io.projectriff.functions.Words");
+		List<String> result = client.send();
+		assertThat(result).contains("foo");
+	}
+
+	@Test
 	public void fluxJson() throws Exception {
 		runner.run("--server.port=0", "--grpc.port=" + port,
 				"--function.uri=file:target/test-classes"
