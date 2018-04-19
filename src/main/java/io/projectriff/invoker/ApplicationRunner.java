@@ -26,6 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.context.support.LiveBeansView;
+import org.springframework.core.env.SimpleCommandLinePropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -62,7 +64,7 @@ public class ApplicationRunner {
 			Class<?> cls = this.classLoader.loadClass(ContextRunner.class.getName());
 			this.app = new StandardEvaluationContext(cls.newInstance());
 			this.app.setTypeLocator(new StandardTypeLocator(this.classLoader));
-			runContext(this.source, defaultProperties(UUID.randomUUID().toString()),
+			runContext(this.source, defaultProperties(UUID.randomUUID().toString(), args),
 					args);
 		}
 		catch (Exception e) {
@@ -77,11 +79,21 @@ public class ApplicationRunner {
 		}
 	}
 
-	private Map<String, String> defaultProperties(String id) {
+	private Map<String, String> defaultProperties(String id, String[] args) {
 		Map<String, String> map = new HashMap<>();
 		map.put(LiveBeansView.MBEAN_DOMAIN_PROPERTY_NAME, "function-invoker-" + id);
 		map.put("spring.jmx.default-domain", "function-invoker-" + id);
 		map.put("spring.jmx.enabled", "false");
+		StandardEnvironment env = new StandardEnvironment();
+		env.getPropertySources()
+				.addFirst(new SimpleCommandLinePropertySource("commandLine", args));
+		String protocol = env.getProperty("riff.function.invoker.protocol");
+		if ("grpc".equals(protocol)) {
+			map.put("spring.main.webEnvironment", "false");
+		}
+		else if ("http".equals(protocol)) {
+			map.put("grpc.enabled", "false");
+		}
 		return map;
 	}
 

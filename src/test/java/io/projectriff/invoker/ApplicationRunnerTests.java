@@ -18,9 +18,13 @@ package io.projectriff.invoker;
 
 import io.projectriff.functions.Doubler;
 import io.projectriff.functions.FunctionApp;
-import io.projectriff.invoker.ApplicationRunner;
 
 import org.junit.Test;
+
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,10 +35,46 @@ public class ApplicationRunnerTests {
 
 	@Test
 	public void startEvaluateAndStop() {
-		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(), FunctionApp.class.getName());
+		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
+				FunctionApp.class.getName());
 		runner.run("--spring.main.webEnvironment=false");
 		assertThat(runner.containsBean(Doubler.class.getName())).isTrue();
 		assertThat(runner.getBean(Doubler.class.getName())).isNotNull();
+		assertThat(runner
+				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
+						.isFalse();
 		runner.close();
+	}
+
+	@Test
+	public void grpcProtocol() {
+		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
+				GrpcApp.class.getName());
+		runner.run("--riff.function.invoker.protocol=grpc", "--function.name=myDoubler",
+				"--grpc.port=0");
+		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isTrue();
+		assertThat(runner
+				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
+						.isFalse();
+		runner.close();
+	}
+
+	@Test
+	public void httpProtocol() {
+		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
+				GrpcApp.class.getName());
+		runner.run("--riff.function.invoker.protocol=http", "--function.name=myDoubler",
+				"--server.port=0");
+		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isFalse();
+		assertThat(runner
+				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
+						.isTrue();
+		runner.close();
+	}
+
+	@Configuration
+	@Import({ FunctionApp.class, GrpcConfiguration.class })
+	@EnableConfigurationProperties(FunctionProperties.class)
+	public static class GrpcApp {
 	}
 }
