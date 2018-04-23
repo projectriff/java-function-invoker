@@ -5,6 +5,8 @@
 *Function*:: link:src/main/java/functions/Uppercase.java[Uppercase.java]
 *Input*:: words
 
+N.B. this sample uses Spring (without really needing to, but just to show how it is done).
+
 === prerequisites
 
 1. riff is deployed
@@ -24,7 +26,7 @@
 === create the function and its input topic
 
 ```
-riff create java --input words --handler functions.Uppercase
+riff create java --input words --handler 'uppercase&main=functions.Application'
 ```
 
 === publish a message and wait for a reply
