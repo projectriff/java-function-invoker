@@ -15,7 +15,7 @@ file, which can be shaded with all required dependencies, or it can be
 a Spring Boot fat jar (with dependencies nested in
 `BOOT-INF/lib`). Simple functions that do not require any dependencies
 work just fine. The simplest form of the handler is a class name that
-can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `'<bean>&main=<main>'` where
+can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `<bean>&main=<main>` where
 
 * `<bean>` is a class name or bean name, and
 * `<main` is a Spring `@Configuration` class to create an application context
