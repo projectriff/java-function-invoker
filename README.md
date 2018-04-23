@@ -24,7 +24,7 @@ If you provide a `main` parameter you need to include Spring Boot and
 all the other dependencies of the context in your archive. If the
 `Function` has POJO (i.e. not generic JDK classes) as parameter types,
 then you also need to depend on `spring-cloud-function-context` (and
-inlcude that in the archive).
+include that in the archive).
 
 Example:
 
@@ -32,10 +32,10 @@ Example:
 riff init java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
 ```
 
-Example with Spring application context
+Example with Spring application context (Note: you need to add quotes around the handler value since it contains an `&`)
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler=greeter&main=functions.Application
+riff init java -i greetings -a target/greeter-1.0.0.jar --handler='greeter&main=functions.Application'
 ```
 
 As long as the dependencies are included in the archive correctly, you
