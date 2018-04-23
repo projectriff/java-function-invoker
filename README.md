@@ -15,7 +15,7 @@ file, which can be shaded with all required dependencies, or it can be
 a Spring Boot fat jar (with dependencies nested in
 `BOOT-INF/lib`). Simple functions that do not require any dependencies
 work just fine. The simplest form of the handler is a class name that
-can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `<bean>&main=<main>` where
+can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `'<bean>&main=<main>'` where
 
 * `<bean>` is a class name or bean name, and
 * `<main` is a Spring `@Configuration` class to create an application context
@@ -35,7 +35,7 @@ riff init java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Gree
 Example with Spring application context
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler=greeter&main=functions.Application
+riff init java -i greetings -a target/greeter-1.0.0.jar --handler='greeter&main=functions.Application'
 ```
 
 As long as the dependencies are included in the archive correctly, you
@@ -81,19 +81,19 @@ file:target/app.jar&handler=functions.Greeter
 * A Spring app (with `spring-cloud-function-context`) and function specified by bean class
 
 ```
-file:target/app.jar&handler=functions.Greeter&main=functions.Application
+file:target/app.jar&handler='functions.Greeter&main=functions.Application'
 ```
 
 * A Spring app and function specified by bean name
 
 ```
-file:target/app.jar&handler=greeter&main=functions.Application
+file:target/app.jar&handler='greeter&main=functions.Application'
 ```
 
 * A Spring app split between 2 jar files
 
 ```
-file:target/app.jar,file:target/lib.jar&handler=greeter&main=functions.Application
+file:target/app.jar,file:target/lib.jar&handler='greeter&main=functions.Application'
 ```
 
 ## Development
