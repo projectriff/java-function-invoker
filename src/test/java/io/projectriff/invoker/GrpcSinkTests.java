@@ -24,6 +24,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.cloud.function.deployer.ApplicationRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
 
@@ -62,8 +63,8 @@ public class GrpcSinkTests {
 						+ "?handler=io.projectriff.functions.Logger");
 		List<String> result = client.send("foo");
 		assertThat(result).isEmpty();
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.Logger")).isFalse();
 		assertThat(runner.isRunning()).isTrue();
 	}
@@ -75,8 +76,8 @@ public class GrpcSinkTests {
 						+ "?handler=io.projectriff.functions.Logger");
 		List<String> result = client.send("foo");
 		assertThat(result).isEmpty();
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.isRunning()).isFalse();
 	}
 }

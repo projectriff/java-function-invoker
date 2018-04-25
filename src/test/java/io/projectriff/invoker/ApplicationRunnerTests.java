@@ -22,7 +22,8 @@ import io.projectriff.functions.FunctionApp;
 import org.junit.Test;
 
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.function.deployer.ApplicationRunner;
+import org.springframework.cloud.function.deployer.EnableFunctionDeployer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -49,9 +50,9 @@ public class ApplicationRunnerTests {
 	@Test
 	public void grpcProtocol() {
 		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
-				GrpcApp.class.getName());
-		runner.run("--riff.function.invoker.protocol=grpc", "--function.name=myDoubler",
-				"--grpc.port=0");
+				App.class.getName());
+		runner.run("--riff.function.invoker.protocol=grpc",
+				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler", "--grpc.port=0");
 		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isTrue();
 		assertThat(runner
 				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
@@ -62,9 +63,9 @@ public class ApplicationRunnerTests {
 	@Test
 	public void httpProtocol() {
 		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
-				GrpcApp.class.getName());
-		runner.run("--riff.function.invoker.protocol=http", "--function.name=myDoubler",
-				"--server.port=0");
+				App.class.getName());
+		runner.run("--riff.function.invoker.protocol=http",
+				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler", "--server.port=0");
 		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isFalse();
 		assertThat(runner
 				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
@@ -73,8 +74,8 @@ public class ApplicationRunnerTests {
 	}
 
 	@Configuration
+	@EnableFunctionDeployer
 	@Import({ FunctionApp.class, GrpcConfiguration.class })
-	@EnableConfigurationProperties(FunctionProperties.class)
-	public static class GrpcApp {
+	public static class App {
 	}
 }

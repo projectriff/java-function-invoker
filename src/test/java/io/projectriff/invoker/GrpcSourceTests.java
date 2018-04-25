@@ -24,6 +24,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.cloud.function.deployer.ApplicationRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
 
@@ -62,8 +63,8 @@ public class GrpcSourceTests {
 						+ "?handler=io.projectriff.functions.Words");
 		List<String> result = client.send();
 		assertThat(result).contains("foo");
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.Words")).isFalse();
 		assertThat(runner.isRunning()).isTrue();
 	}
@@ -75,8 +76,8 @@ public class GrpcSourceTests {
 						+ "?handler=io.projectriff.functions.Words");
 		List<String> result = client.send();
 		assertThat(result).contains("foo");
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.isRunning()).isFalse();
 	}
 }

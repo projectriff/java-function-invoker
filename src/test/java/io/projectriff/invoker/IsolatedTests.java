@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.cloud.function.deployer.ApplicationRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -83,8 +84,8 @@ public class IsolatedTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 		// Check single valued response in s-c-f
 		assertThat(result.getBody()).isEqualTo("[10]");
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler")).isFalse();
 	}
 
@@ -120,20 +121,6 @@ public class IsolatedTests {
 		runner.run("--server.port=" + port, "--grpc.port=0",
 				"--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Doubler");
-		ResponseEntity<String> result = rest
-				.exchange(
-						RequestEntity.post(new URI("http://localhost:" + port + "/"))
-								.contentType(MediaType.TEXT_PLAIN).body("5"),
-						String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("10");
-	}
-
-	@Test
-	public void appClassPath() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=app:classpath?"
-						+ "handler=io.projectriff.functions.SpringDoubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))

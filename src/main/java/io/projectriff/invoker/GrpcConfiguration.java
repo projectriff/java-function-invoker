@@ -39,6 +39,7 @@ import org.springframework.cloud.function.context.FunctionType;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.cloud.function.core.FluxConsumer;
 import org.springframework.cloud.function.core.FluxSupplier;
+import org.springframework.cloud.function.deployer.FunctionProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;

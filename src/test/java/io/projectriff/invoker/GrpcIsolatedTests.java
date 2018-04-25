@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
+import org.springframework.cloud.function.deployer.ApplicationRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
@@ -82,8 +83,8 @@ public class GrpcIsolatedTests {
 						+ "?handler=io.projectriff.functions.FluxDoubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.FluxDoubler")).isFalse();
 	}
 
@@ -124,8 +125,8 @@ public class GrpcIsolatedTests {
 		List<String> result = client.send("{\"value\":\"World\"}");
 		// Custom JSON serialization doesn't work across the class loader boundary
 		assertThat(result).contains("{\"value\":\"Hello World\"}");
-		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils
-				.getField(this.runner, "runner");
+		ApplicationRunner runner = (ApplicationRunner) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(this.runner, "bootstrap"), "runner");
 		assertThat(runner.containsBean("io.projectriff.functions.Greeter")).isFalse();
 	}
 
@@ -177,15 +178,6 @@ public class GrpcIsolatedTests {
 		List<String> result = client.send(MediaType.APPLICATION_JSON,
 				"{\"value\":\"World\"}");
 		assertThat(result.get(0)).contains("Hello World");
-	}
-
-	@Test
-	public void appClassPath() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=app:classpath?"
-						+ "handler=io.projectriff.functions.SpringDoubler");
-		List<String> result = client.send("5");
-		assertThat(result).contains("10");
 	}
 
 	@Test(expected = Exception.class)
