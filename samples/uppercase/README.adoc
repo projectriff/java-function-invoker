@@ -26,14 +26,14 @@ N.B. this sample uses Spring (without really needing to, but just to show how it
 === create the function and its input topic
 
 ```
-riff create java --input words --handler 'uppercase&main=functions.Application'
+riff create java --handler 'uppercase&main=functions.UppercaseApplication'
 ```
 
 === publish a message and wait for a reply
 
 In a terminal window:
 ```
-riff publish --input words --data hello --reply
+riff publish --data hello --reply
 ```
 
 === delete the function and its input topic

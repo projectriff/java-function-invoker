@@ -6,4 +6,8 @@
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
+	<name>greeter</name>
+	<description>Sample project for riff using String</description>
+	<url>https://github.com/projectriff/java-function-invoker</url>
+
 </project>
