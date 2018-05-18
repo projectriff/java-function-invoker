@@ -15,13 +15,15 @@ file, which can be shaded with all required dependencies, or it can be
 a Spring Boot fat jar (with dependencies nested in
 `BOOT-INF/lib`). Simple functions that do not require any dependencies
 work just fine. The simplest form of the handler is a class name that
-can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `<bean>&main=<main>` where
+can be instantiated (with a default constructor). More complex creation scenarios can be handled by giving the handler in the form `<bean>[&main=<main>]` where
 
 * `<bean>` is a class name or bean name, and
 * `<main` is a Spring `@Configuration` class to create an application context
 
 If you provide a `main` parameter you need to include Spring Boot and
-all the other dependencies of the context in your archive. If the
+all the other dependencies of the context in your archive. A Spring
+Boot jar file does not need an explicit `main` (there is one in the
+`MANIFEST.MF`), but if you supply one it will be used. If the
 `Function` has POJO (i.e. not generic JDK classes) as parameter types,
 then you also need to depend on `spring-cloud-function-context` (and
 include that in the archive).
@@ -32,10 +34,16 @@ Example:
 riff init java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
 ```
 
-Example with Spring application context (Note: you need to add quotes around the handler value since it contains an `&`)
+Example with Spring Boot application:
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler='greeter&main=functions.Application'
+riff init java -i greetings -a target/greeter-1.0.0.jar --handler=greeter
+```
+
+Example with Spring application context and an explicit main (Note: you need to add quotes around the handler value since it contains an `&`)
+
+```
+riff init java -i greetings -a target/greeter-1.0.0.jar --handler='greeter&main=functions.FunctionApp'
 ```
 
 As long as the dependencies are included in the archive correctly, you
@@ -62,10 +70,12 @@ classpath archive, which can be a jar file or a directory, together
 with parameters:
 
 * `handler`: the class name of a `Function` to execute, or (when
-  `main` is also provided) a bean name of a `Function`.
-* `main`: the class name of a Spring `@Configuration` that can be used
-  to create a Spring application context, in which the `handler` is
-  defined.
+  `main` is also used) a bean name of a `Function`. Can also be a
+  comma, or pipe-separated list of functions, which are composed
+  together at runtime.
+* `main`: (optional) the class name of a Spring `@Configuration` that
+  can be used to create a Spring application context, in which the
+  `handler` is defined.
 
 The jar archive can also be a comma-separated list of archive
 locations, in case you need to compose things together.
