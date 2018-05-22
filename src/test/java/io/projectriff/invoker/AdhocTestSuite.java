@@ -27,7 +27,8 @@ import org.junit.runners.Suite.SuiteClasses;
  * @author Dave Syer
  */
 @RunWith(Suite.class)
-@SuiteClasses({ ComposedJavaFunctionInvokerApplicationTests.class, IsolatedTests.class })
+@SuiteClasses({ FatJarPojoTests.class, ExceptionConverterTests.class,
+		ApplicationRunnerTests.class, FatJarNextTests.class, GrpcSinkTests.class })
 @Ignore
 public class AdhocTestSuite {
 

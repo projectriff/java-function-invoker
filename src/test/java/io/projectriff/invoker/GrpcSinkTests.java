@@ -58,8 +58,8 @@ public class GrpcSinkTests {
 
 	@Test
 	public void fluxConsumer() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Logger");
 		List<String> result = client.send("foo");
 		assertThat(result).isEmpty();
@@ -71,7 +71,8 @@ public class GrpcSinkTests {
 
 	@Test
 	public void fluxConsumerCloses() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port, "--grpc.exitOnComplete=true",
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--grpc.exitOnComplete=true",
 				"--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Logger");
 		List<String> result = client.send("foo");

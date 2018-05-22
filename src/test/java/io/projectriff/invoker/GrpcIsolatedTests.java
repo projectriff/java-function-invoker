@@ -63,7 +63,8 @@ public class GrpcIsolatedTests {
 	@Test
 	public void fluxFunctionNotIsolated() throws Exception {
 		expected.expect(BeanCreationException.class);
-		SpringApplication.run(JavaFunctionInvokerApplication.class, "--server.port=0",
+		SpringApplication.run(JavaFunctionInvokerApplication.class,
+				"--riff.function.invoker.protocol=grpc", "--server.port=0",
 				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.FluxDoubler");
 	}
@@ -71,15 +72,16 @@ public class GrpcIsolatedTests {
 	@Test
 	public void nonExistentFunction() throws Exception {
 		expected.expect(BeanCreationException.class);
-		SpringApplication.run(JavaFunctionInvokerApplication.class, "--server.port=0",
+		SpringApplication.run(JavaFunctionInvokerApplication.class,
+				"--riff.function.invoker.protocol=grpc", "--server.port=0",
 				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.NotHere");
 	}
 
 	@Test
 	public void fluxFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.FluxDoubler");
 		List<String> result = client.send("5");
 		assertThat(result).contains("10");
@@ -91,8 +93,8 @@ public class GrpcIsolatedTests {
 	@Test
 	// @Ignore("Function that blocks really gums things up")
 	public void weirdFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Weird");
 		List<String> result = client.send("start");
 		assertThat(result).isEmpty();
@@ -101,8 +103,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void supplier() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.NumberEmitter");
 		List<String> result = client.send();
 		assertThat(result).contains("1");
@@ -110,8 +112,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void fluxSupplier() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Words");
 		List<String> result = client.send();
 		assertThat(result).contains("foo");
@@ -119,8 +121,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void fluxJson() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Greeter");
 		List<String> result = client.send("{\"value\":\"World\"}");
 		// Custom JSON serialization doesn't work across the class loader boundary
@@ -132,7 +134,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void messageFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=file:target/test-classes,file:target/test-functions"
 						+ "?handler=io.projectriff.functions.MessageGreeter");
 		List<String> result = client.send("World");
@@ -141,7 +144,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void fluxMessageFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=file:target/test-classes,file:target/test-functions"
 						+ "?handler=io.projectriff.functions.FluxMessageGreeter");
 		List<String> result = client.send("{\"value\":\"World\"}");
@@ -150,7 +154,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void windowFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=file:target/test-classes,file:target/test-functions"
 						+ "?handler=io.projectriff.functions.VoteStreamProcessor");
 		List<String> result = client.send("one", "one", "two");
@@ -159,8 +164,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void simpleFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Doubler");
 		List<String> result = client.send(
 				message -> new String(message.getPayload().toByteArray()) + ":"
@@ -172,8 +177,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void pojoFunction() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
-				"--function.uri=file:target/test-classes"
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.Greeter");
 		List<String> result = client.send(MediaType.APPLICATION_JSON,
 				"{\"value\":\"World\"}");
@@ -182,14 +187,16 @@ public class GrpcIsolatedTests {
 
 	@Test(expected = Exception.class)
 	public void nonExistentFunctionWithMain() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=app:classpath?" + "handler=notThere&"
 						+ "main=io.projectriff.functions.FunctionApp");
 	}
 
 	@Test
 	public void mainClassBeanName() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=app:classpath?" + "handler=myDoubler&"
 						+ "main=io.projectriff.functions.FunctionApp");
 		List<String> result = client.send("5");
@@ -198,7 +205,8 @@ public class GrpcIsolatedTests {
 
 	@Test
 	public void mainClassBeanType() throws Exception {
-		runner.run("--server.port=0", "--grpc.port=" + port,
+		runner.run("--riff.function.invoker.protocol=grpc", "--server.port=0",
+				"--grpc.port=" + port,
 				"--function.uri=app:classpath?"
 						+ "handler=io.projectriff.functions.Doubler&"
 						+ "main=io.projectriff.functions.FunctionApp");
