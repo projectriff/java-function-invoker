@@ -4,7 +4,7 @@ kind: Invoker
 metadata:
   name: java
 spec:
-  version: 0.0.7
+  version: 0.0.8-snapshot
   matchers:
   - "*.jar"
   - "target/*.jar"

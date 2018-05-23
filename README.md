@@ -112,7 +112,7 @@ Testing locally with HTTP:
 
 ```bash
 $ ./mvnw clean install dockerfile:build
-$ docker run -ti -p 8080:8080 -v `pwd`/target/test-classes:/classes projectriff/java-function-invoker:0.0.7 --function.uri='file:classes?handler=io.projectriff.functions.Doubler'
+$ docker run -ti -p 8080:8080 -v `pwd`/target/test-classes:/classes projectriff/java-function-invoker:0.0.8-snapshot --function.uri='file:classes?handler=io.projectriff.functions.Doubler'
 ```
 
 Then
