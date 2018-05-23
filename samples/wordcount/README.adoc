@@ -22,10 +22,36 @@
 ./mvnw clean package
 ```
 
-=== create the function and its input topic
+=== create the function and its input topic resource definitions
 
 ```
-riff create java --input words --output counts --handler functions.Wordcount
+riff init java --input words --output counts --handler functions.Wordcount
+```
+
+=== modify the function resource definition's windowing declaration
+
+Modify the `wordcount-function.yaml` that was just created. Change the `windowing`
+declaration to be either 
+
+- time based:
++
+```
+  windowing:
+    time: 10s
+```
+
+- or, based on number of messages:
++
+```
+  windowing:
+    size: 5
+```
+
+=== build and create the function and its input topic
+
+```
+riff build
+riff apply
 ```
 
 === publish messages and witness grouped counts
@@ -40,12 +66,25 @@ In a different terminal window, in quick succession:
 riff publish --input words --data Two
 riff publish --input words --data One
 riff publish --input words --data Two
+riff publish --input words --data Three
+riff publish --input words --data One
+riff publish --input words --data Two
 ```
 
 You'll see output similar to the following:
+
 ```
- Content-Type["text/plain"]	timestamp["1519342606257"]{"one":1,"two":2}
+ timestamp["1527008218465"]{"One":2,"Two":2,"Three":1}
+ timestamp["1527008230607"]{"Two":1}
 ```
+
+or 
+
+```
+ timestamp["1527008390450"]{"One":2,"Two":3,"Three":1}
+```
+
+depending on how you configure your windows.
 
 === delete the function and its input topic
 

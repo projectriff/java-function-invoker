@@ -26,7 +26,7 @@ N.B. this sample uses Spring (without really needing to, but just to show how it
 === create the function and its input topic
 
 ```
-riff create java --handler 'uppercase&main=functions.UppercaseApplication'
+riff create java --handler uppercase
 ```
 
 === publish a message and wait for a reply
