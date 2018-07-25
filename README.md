@@ -1,15 +1,9 @@
 
 # Java Function Invoker [![Build Status](https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master)](https://travis-ci.org/projectriff/java-function-invoker)
 
-## Install as a riff invoker
-
-```bash
-riff invokers apply -f java-invoker.yaml
-```
-
 ## Usage
 
-With the `riff` CLI you need to provide an archive location with `-a`
+With the `riff` CLI you need to provide an archive location with `--archive`
 and a handler specification with `--handler`. The archive is a jar
 file, which can be shaded with all required dependencies, or it can be
 a Spring Boot fat jar (with dependencies nested in
@@ -31,19 +25,19 @@ include that in the archive).
 Example:
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
+--artifact target/greeter-1.0.0.jar --handler=functions.Greeter
 ```
 
 Example with Spring Boot application:
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler=greeter
+--artifact target/greeter-1.0.0.jar --handler=greeter
 ```
 
 Example with Spring application context and an explicit main (Note: you need to add quotes around the handler value since it contains an `&`)
 
 ```
-riff init java -i greetings -a target/greeter-1.0.0.jar --handler='greeter&main=functions.FunctionApp'
+--artifact target/greeter-1.0.0.jar --handler='greeter&main=functions.FunctionApp'
 ```
 
 As long as the dependencies are included in the archive correctly, you
@@ -122,113 +116,3 @@ $ curl -v localhost:8080 -H "Content-Type: text/plain" -d 5
 10
 ```
 
-## riff Commands
-
-- [riff init java](#riff-init-java)
-- [riff create java](#riff-create-java)
-
-<!-- riff-init -->
-
-### riff init java
-
-Initialize a java function
-
-#### Synopsis
-
-Generate the function based on the function source code specified as the filename, using the artifact (jar file),
-the function handler (classname or bean name), the name and version specified for the function image repository and tag.
-
-For example, from a maven project directory named 'greeter', type:
-
-    riff init java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
-
-to generate the resource definitions using sensible defaults.
-
-
-```
-riff init java [flags]
-```
-
-#### Options
-
-```
-      --handler string   the fully qualified class name or bean name of the function handler (default "functions.{{ .TitleCase .FunctionName }}")
-  -h, --help             help for java
-```
-
-#### Options inherited from parent commands
-
-```
-  -a, --artifact string          path to the function artifact, source code or jar file
-      --config string            config file (default is $HOME/.riff.yaml)
-      --dry-run                  print generated function artifacts content to stdout only
-  -f, --filepath string          path or directory used for the function resources (defaults to the current directory)
-      --force                    overwrite existing functions artifacts
-  -i, --input string             the name of the input topic (defaults to function name)
-      --invoker-version string   the version of the invoker to use when building containers
-  -n, --name string              the name of the function (defaults to the name of the current directory)
-  -o, --output string            the name of the output topic (optional)
-  -u, --useraccount string       the Docker user account to be used for the image repository (default "current OS user")
-  -v, --version string           the version of the function image (default "0.0.1")
-```
-
-#### SEE ALSO
-
-* [riff init](https://github.com/projectriff/riff/blob/master/riff-cli/docs/riff_init.md)	 - Initialize a function
-
-
-<!-- /riff-init -->
-
-<!-- riff-create -->
-
-### riff create java
-
-Create a java function
-
-#### Synopsis
-
-Create the function based on the function source code specified as the filename, using the artifact (jar file),
-the function handler (classname or bean name), the name and version specified for the function image repository and tag.
-
-For example, from a maven project directory named 'greeter', type:
-
-    riff create java -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
-
-to create the resource definitions, and apply the resources, using sensible defaults.
-
-
-```
-riff create java [flags]
-```
-
-#### Options
-
-```
-      --handler string     the fully qualified class name or bean name of the function handler (default "functions.{{ .TitleCase .FunctionName }}")
-  -h, --help               help for java
-      --namespace string   the namespace used for the deployed resources (defaults to kubectl's default)
-      --push               push the image to Docker registry
-```
-
-#### Options inherited from parent commands
-
-```
-  -a, --artifact string          path to the function artifact, source code or jar file
-      --config string            config file (default is $HOME/.riff.yaml)
-      --dry-run                  print generated function artifacts content to stdout only
-  -f, --filepath string          path or directory used for the function resources (defaults to the current directory)
-      --force                    overwrite existing functions artifacts
-  -i, --input string             the name of the input topic (defaults to function name)
-      --invoker-version string   the version of the invoker to use when building containers
-  -n, --name string              the name of the function (defaults to the name of the current directory)
-  -o, --output string            the name of the output topic (optional)
-  -u, --useraccount string       the Docker user account to be used for the image repository (default "current OS user")
-  -v, --version string           the version of the function image (default "0.0.1")
-```
-
-#### SEE ALSO
-
-* [riff create](https://github.com/projectriff/riff/blob/master/riff-cli/docs/riff_create.md)	 - Create a function (equivalent to init, build, apply)
-
-
-<!-- /riff-create -->
