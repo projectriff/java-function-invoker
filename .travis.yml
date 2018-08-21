@@ -7,8 +7,7 @@ cache:
 matrix:
   include:
   - stage: test
-    before_install: go get github.com/projectriff/riff
-    script: make test verify-docs
+    script: ./mvnw clean test
   - stage: publish
     sudo: required
     services:
