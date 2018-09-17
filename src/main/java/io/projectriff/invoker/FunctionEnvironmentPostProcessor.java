@@ -51,13 +51,6 @@ public class FunctionEnvironmentPostProcessor implements EnvironmentPostProcesso
 			Assert.isTrue(m.matches(),
 					"expected format: <jarLocation>?handler=<className>[&main=<className>]");
 
-			String protocol = environment.getProperty("riff.function.invoker.protocol");
-			if ("grpc".equals(protocol)) {
-				application.setWebEnvironment(false);
-			}
-			else if ("http".equals(protocol)) {
-				map.put("grpc.enabled", "false");
-			}
 			String jarLocation = m.group(1);
 			String className = m.group(2);
 			String rest = m.group(3);

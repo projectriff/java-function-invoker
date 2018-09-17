@@ -21,11 +21,8 @@ import io.projectriff.functions.FunctionApp;
 
 import org.junit.Test;
 
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.cloud.function.deployer.ApplicationRunner;
-import org.springframework.cloud.function.deployer.EnableFunctionDeployer;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,44 +35,24 @@ public class ApplicationRunnerTests {
 	public void startEvaluateAndStop() {
 		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
 				FunctionApp.class.getName());
-		runner.run("--spring.main.webEnvironment=false");
+		runner.run("--spring.main.web-application-type=NONE");
 		assertThat(runner.containsBean(Doubler.class.getName())).isTrue();
 		assertThat(runner.getBean(Doubler.class.getName())).isNotNull();
-		assertThat(runner
-				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
-						.isFalse();
-		runner.close();
-	}
-
-	@Test
-	public void grpcProtocol() {
-		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
-				App.class.getName());
-		runner.run("--riff.function.invoker.protocol=grpc",
-				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler", "--grpc.port=0");
-		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isTrue();
-		assertThat(runner
-				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
-						.isFalse();
+		assertThat(runner.containsBean(TomcatServletWebServerFactory.class.getName()))
+				.isFalse();
 		runner.close();
 	}
 
 	@Test
 	public void httpProtocol() {
 		ApplicationRunner runner = new ApplicationRunner(getClass().getClassLoader(),
-				App.class.getName());
-		runner.run("--riff.function.invoker.protocol=http",
-				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler", "--server.port=0");
-		assertThat(runner.containsBean(GrpcConfiguration.class.getName())).isFalse();
-		assertThat(runner
-				.containsBean(TomcatEmbeddedServletContainerFactory.class.getName()))
-						.isTrue();
+				FunctionApp.class.getName());
+		runner.run(
+				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler",
+				"--server.port=0");
+		assertThat(runner.containsBean(TomcatServletWebServerFactory.class.getName()))
+				.isTrue();
 		runner.close();
 	}
 
-	@Configuration
-	@EnableFunctionDeployer
-	@Import({ FunctionApp.class, GrpcConfiguration.class })
-	public static class App {
-	}
 }
