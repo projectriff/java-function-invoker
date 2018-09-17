@@ -7,7 +7,7 @@ cache:
 matrix:
   include:
   - stage: test
-    script: ./mvnw clean test
+    script: ./mvnw clean test -U
   - stage: publish
     sudo: required
     services:
