@@ -16,10 +16,7 @@
 
 package io.projectriff.invoker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.URI;
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,33 +33,26 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Mark Fisher
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext
-@TestPropertySource(properties = {"grpc.port=0", "function.uri=file:target/test-classes"
-		+ "?handler=io.projectriff.functions.Doubler,io.projectriff.functions.Frenchizer"})
+@TestPropertySource(properties = { "function.uri=file:target/test-classes"
+		+ "?handler=io.projectriff.functions.Doubler,io.projectriff.functions.Frenchizer" })
 public class ComposedJavaFunctionInvokerApplicationTests {
 
 	@Autowired
 	private TestRestTemplate rest;
 
-	@Autowired
-	private GrpcConfiguration server;
-
-	@Test
-	public void grpc() throws Exception {
-		GrpcTestClient client = new GrpcTestClient("localhost", server.getPort());
-		List<String> result = client.send("2");
-		assertThat(result).contains("quatre");
-	}
-
 	@Test
 	public void http() throws Exception {
 		ResponseEntity<String> result = rest.exchange(RequestEntity.post(new URI("/"))
-				.contentType(MediaType.TEXT_PLAIN).body("2"), String.class);
+				.contentType(MediaType.TEXT_PLAIN).accept(MediaType.TEXT_PLAIN).body("2"),
+				String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(result.getBody()).isEqualTo("quatre");
 	}

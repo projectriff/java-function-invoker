@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext
-@TestPropertySource(properties = { "grpc.port=0", "function.uri=file:target/test-classes"
+@TestPropertySource(properties = { "function.uri=file:target/test-classes"
 		+ "?handler=io.projectriff.functions.Doubler" })
 public class JavaFunctionInvokerApplicationTests {
 

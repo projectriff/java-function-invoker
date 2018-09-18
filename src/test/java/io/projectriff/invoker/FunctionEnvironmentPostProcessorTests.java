@@ -17,7 +17,7 @@ package io.projectriff.invoker;
 
 import org.junit.Test;
 
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,8 +34,8 @@ public class FunctionEnvironmentPostProcessorTests {
 
 	@Test
 	public void uriWithHandler() {
-		EnvironmentTestUtils.addEnvironment(environment,
-				"function.uri=file:target/test-classes?handler=foo");
+		TestPropertyValues.of("function.uri=file:target/test-classes?handler=foo")
+				.applyTo(environment);
 		processor.postProcessEnvironment(environment, null);
 		assertThat(environment.getProperty("function.location"))
 				.isEqualTo("file:target/test-classes");
@@ -44,8 +44,9 @@ public class FunctionEnvironmentPostProcessorTests {
 
 	@Test
 	public void uriWithHandlerAndMain() {
-		EnvironmentTestUtils.addEnvironment(environment,
-				"function.uri=file:target/test-classes?handler=foo&main=FooFuncs");
+		TestPropertyValues
+				.of("function.uri=file:target/test-classes?handler=foo&main=FooFuncs")
+				.applyTo(environment);
 		processor.postProcessEnvironment(environment, null);
 		assertThat(environment.getProperty("function.location"))
 				.isEqualTo("file:target/test-classes");
@@ -55,8 +56,8 @@ public class FunctionEnvironmentPostProcessorTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void uriWithNoHandler() {
-		EnvironmentTestUtils.addEnvironment(environment,
-				"function.uri=file:target/test-classes");
+		TestPropertyValues.of("function.uri=file:target/test-classes")
+				.applyTo(environment);
 		processor.postProcessEnvironment(environment, null);
 		assertThat(environment.getProperty("function.location"))
 				.isEqualTo("file:target/test-classes");

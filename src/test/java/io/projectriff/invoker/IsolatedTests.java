@@ -66,16 +66,14 @@ public class IsolatedTests {
 	public void fluxFunctionNotIsolated() throws Exception {
 		expected.expect(BeanCreationException.class);
 		SpringApplication.run(JavaFunctionInvokerApplication.class,
-				"--server.port=" + port, "--grpc.port=0",
-				"--function.uri=file:target/test-classes"
+				"--server.port=" + port, "--function.uri=file:target/test-classes"
 						+ "?handler=io.projectriff.functions.FluxDoubler");
 	}
 
 	@Test
 	public void fluxFunction() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=file:target/test-classes"
-						+ "?handler=io.projectriff.functions.FluxDoubler");
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
+				+ "?handler=io.projectriff.functions.FluxDoubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -91,7 +89,7 @@ public class IsolatedTests {
 
 	@Test
 	public void messageFunction() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=file:target/test-classes,file:target/test-functions"
 						+ "?handler=io.projectriff.functions.MessageGreeter");
 		ResponseEntity<String> result = rest
@@ -105,7 +103,7 @@ public class IsolatedTests {
 
 	@Test
 	public void fluxMessageFunction() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=file:target/test-classes,file:target/test-functions"
 						+ "?handler=io.projectriff.functions.FluxMessageGreeter");
 		ResponseEntity<String> result = rest.exchange(RequestEntity
@@ -118,9 +116,8 @@ public class IsolatedTests {
 
 	@Test
 	public void simpleFunction() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=file:target/test-classes"
-						+ "?handler=io.projectriff.functions.Doubler");
+		runner.run("--server.port=" + port, "--function.uri=file:target/test-classes"
+				+ "?handler=io.projectriff.functions.Doubler");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -132,9 +129,8 @@ public class IsolatedTests {
 
 	@Test
 	public void mainClassBeanName() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=app:classpath?" + "handler=myDoubler&"
-						+ "main=io.projectriff.functions.FunctionApp");
+		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
+				+ "handler=myDoubler&" + "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -146,7 +142,7 @@ public class IsolatedTests {
 
 	@Test
 	public void mainClassBeanType() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=app:classpath?"
 						+ "handler=io.projectriff.functions.Doubler&"
 						+ "main=io.projectriff.functions.FunctionApp");
