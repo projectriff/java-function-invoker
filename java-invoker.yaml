@@ -4,7 +4,7 @@ kind: Invoker
 metadata:
   name: java
 spec:
-  version: 0.1.1-snapshot
+  version: 0.1.1
   matchers:
   - "*.jar"
   - "target/*.jar"
@@ -23,11 +23,5 @@ spec:
       ADD {{.Artifact}} $FUNCTION_JAR
       ENV FUNCTION_URI file://${FUNCTION_JAR}?handler=${FUNCTION_HANDLER}
   doc: |
-    {{.Process}} the function based on the function source code specified as the filename, using the artifact (jar file),
-    the function handler (classname or bean name), the name and version specified for the function image repository and tag.
-    
-    For example, from a maven project directory named 'greeter', type:
-    
-        riff {{.Command}} -i greetings -a target/greeter-1.0.0.jar --handler=functions.Greeter
-    
-    to {{.Result}}.
+    Package the function using the artifact (jar file), the function handler (classname or bean name), 
+    the name and version specified for the function image repository and tag.

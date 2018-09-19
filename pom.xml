@@ -5,7 +5,7 @@
 
 	<groupId>io.projectriff</groupId>
 	<artifactId>java-function-invoker</artifactId>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.1</version>
 	<packaging>jar</packaging>
 
 	<parent>
@@ -22,7 +22,7 @@
 		<spring-cloud-function.version>2.0.0.M2</spring-cloud-function.version>
 		<dockerfile-maven.version>1.4.3</dockerfile-maven.version>
 		<docker.org>projectriff</docker.org>
-		<docker.tag>0.1.1-snapshot</docker.tag>
+		<docker.tag>0.1.1</docker.tag>
 	</properties>
 
 	<dependencies>
