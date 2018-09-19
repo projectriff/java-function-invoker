@@ -9,13 +9,7 @@ N.B. this sample uses Spring (without really needing to, but just to show how it
 
 === prerequisites
 
-1. riff is deployed
-2. the `riff` CLI is on your PATH
-3. the java invoker is installed
-
-    riff invokers apply -f https://github.com/projectriff/java-function-invoker/raw/master/java-invoker.yaml
-
-4. the working directory is `samples/uppercase`
+1. the working directory is `samples/uppercase`
 
 === compile the Java code and build the JAR
 
@@ -23,21 +17,3 @@ N.B. this sample uses Spring (without really needing to, but just to show how it
 ./mvnw clean package
 ```
 
-=== create the function and its input topic
-
-```
-riff create java --handler uppercase
-```
-
-=== publish a message and wait for a reply
-
-In a terminal window:
-```
-riff publish --data hello --reply
-```
-
-=== delete the function and its input topic
-
-```
-riff delete --all
-```
