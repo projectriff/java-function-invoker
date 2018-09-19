@@ -7,87 +7,10 @@
 
 === prerequisites
 
-1. riff is deployed
-2. the `riff` CLI is on your PATH
-3. the java invoker is installed
-
-    riff invokers apply -f https://github.com/projectriff/java-function-invoker/raw/master/java-invoker.yaml
-
-4. the `topics` helper script is on your PATH
-5. the working directory is `samples/wordcount`
+1. the working directory is `samples/wordcount`
 
 === compile the Java code and build the JAR
 
 ```
 ./mvnw clean package
-```
-
-=== create the function and its input topic resource definitions
-
-```
-riff init java --input words --output counts --handler functions.Wordcount
-```
-
-=== modify the function resource definition's windowing declaration
-
-Modify the `wordcount-function.yaml` that was just created. Change the `windowing`
-declaration to be either 
-
-- time based:
-+
-```
-  windowing:
-    time: 10s
-```
-
-- or, based on number of messages:
-+
-```
-  windowing:
-    size: 5
-```
-
-=== build and create the function and its input topic
-
-```
-riff build
-riff apply
-```
-
-=== publish messages and witness grouped counts
-
-In a terminal window:
-```
-topics tail -n counts
-```
-
-In a different terminal window, in quick succession:
-```
-riff publish --input words --data Two
-riff publish --input words --data One
-riff publish --input words --data Two
-riff publish --input words --data Three
-riff publish --input words --data One
-riff publish --input words --data Two
-```
-
-You'll see output similar to the following:
-
-```
- timestamp["1527008218465"]{"One":2,"Two":2,"Three":1}
- timestamp["1527008230607"]{"Two":1}
-```
-
-or 
-
-```
- timestamp["1527008390450"]{"One":2,"Two":3,"Three":1}
-```
-
-depending on how you configure your windows.
-
-=== delete the function and its input topic
-
-```
-riff delete --all
 ```
