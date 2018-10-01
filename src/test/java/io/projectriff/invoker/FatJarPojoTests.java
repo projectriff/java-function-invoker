@@ -69,7 +69,7 @@ public class FatJarPojoTests {
 
 	@Test
 	public void fatJar() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=" + sampleJar.toURI() + "?handler=uppercase");
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("http://localhost:" + port + "/"))
@@ -81,7 +81,7 @@ public class FatJarPojoTests {
 
 	@Test
 	public void fatJarAndDirectory() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0", "--function.uri="
+		runner.run("--server.port=" + port, "--function.uri="
 				+ sampleDir.toURI() + "," + sampleJar.toURI() + "?handler=uppercase");
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("http://localhost:" + port + "/"))

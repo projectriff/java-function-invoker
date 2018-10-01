@@ -67,7 +67,7 @@ public class FatJarPofTests {
 
 	@Test
 	public void fatJar() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=" + sampleJar.toURI() + "?handler=functions.Greeter");
 		ResponseEntity<String> result = rest
 				.exchange(
@@ -80,9 +80,8 @@ public class FatJarPofTests {
 
 	@Test
 	public void fatJarWithMain() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=" + sampleJar.toURI()
-						+ "?handler=functions.Greeter&main=functions.Application");
+		runner.run("--server.port=" + port, "--function.uri=" + sampleJar.toURI()
+				+ "?handler=functions.Greeter&main=functions.Application");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
@@ -96,7 +95,7 @@ public class FatJarPofTests {
 	public void libJar() throws Exception {
 		String uri = sampleJar.toURI().toString();
 		uri = uri.replaceAll("-exec", "");
-		runner.run("--server.port=" + port, "--grpc.port=0",
+		runner.run("--server.port=" + port,
 				"--function.uri=" + uri + "?handler=functions.Greeter");
 		ResponseEntity<String> result = rest
 				.exchange(

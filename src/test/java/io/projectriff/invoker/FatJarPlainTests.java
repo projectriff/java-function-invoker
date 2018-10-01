@@ -67,9 +67,8 @@ public class FatJarPlainTests {
 
 	@Test
 	public void simple() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=" + sampleJar.toURI()
-						+ "?handler=lowercase&main=com.example.SampleApplication");
+		runner.run("--server.port=" + port, "--function.uri=" + sampleJar.toURI()
+				+ "?handler=lowercase&main=com.example.SampleApplication");
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("http://localhost:" + port + "/"))
 				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"FOO\"}"),
@@ -80,9 +79,8 @@ public class FatJarPlainTests {
 
 	@Test
 	public void breaks() throws Exception {
-		runner.run("--server.port=" + port, "--grpc.port=0",
-				"--function.uri=" + sampleJar.toURI()
-						+ "?handler=uppercase&main=com.example.SampleApplication");
+		runner.run("--server.port=" + port, "--function.uri=" + sampleJar.toURI()
+				+ "?handler=uppercase&main=com.example.SampleApplication");
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("http://localhost:" + port + "/"))
 				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"foo\"}"),
