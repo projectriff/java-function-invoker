@@ -90,4 +90,16 @@ public class FatJarPojoTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"}]");
 	}
+
+	@Test
+	public void fatJarAndDirectoryPlainText() throws Exception {
+		runner.run("--server.port=" + port, "--function.uri="
+				+ sampleDir.toURI() + "," + sampleJar.toURI() + "?handler=strings");
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("http://localhost:" + port + "/"))
+				.contentType(MediaType.TEXT_PLAIN).body("foo"),
+				String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getBody()).isEqualTo("[\"FOO\"]");
+	}
 }

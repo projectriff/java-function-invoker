@@ -33,6 +33,11 @@ public class SampleApplication {
 	}
 
 	@Bean
+	public Function<Flux<String>, Flux<String>> strings() {
+		return flux -> flux.log().map(value -> value.toUpperCase());
+	}
+
+	@Bean
 	public Supplier<Flux<Bar>> words() {
 		return () -> Flux.fromArray(new Bar[] { new Bar("foo"), new Bar("bar") }).log();
 	}
