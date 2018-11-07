@@ -192,9 +192,11 @@ Now you can build and deploy your function from this Git repo using:
 
 ```sh
 export GCP_PROJECT=$(gcloud config get-value core/project)
-export GIT_REPO=<your Git repo URL>
-riff function create java upper --git-repo $GIT_REPO --image gcr.io/$GCP_PROJECT/upper --verbose
+export GIT_REPO=https://github.com/trisberg/upper.git
+riff function create java upper --git-repo $GIT_REPO --handler upper --image gcr.io/$GCP_PROJECT/upper-new --verbose
 ```
+
+> NOTE: You need to provide the `--handler` option since the cluster build will override any value in the `riff.toml` file. This makes it possible to have multiple function beans in the same source repository and just refer to the one you want to use at deployment time.
 
 Once the function is up and running you can invoke it using:
 
