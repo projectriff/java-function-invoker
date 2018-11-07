@@ -133,7 +133,7 @@ curl localhost:8080 -H 'Content-Type: text/plain' -w '\n' -d hello
 HELLO
 ```
 
-### Building and deploying functions locally
+### Building and deploying functions to local cluster
 
 To build and deploy your function locally you can use the `riff` CLI which can be installed following the instructions on the [riff Release page](https://github.com/projectriff/riff/releases).
 
