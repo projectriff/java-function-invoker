@@ -6,6 +6,7 @@
 The "Java Function Invoker" let's you concentrate on writing your business logic as a Java function while the invoker takes care of the rest that is needed to run your functions in a Kubernetes cluster with riff and Knative installed.
 The invoker is a [Spring Boot](https://projects.spring.io/spring-boot) application that will locate your function in the JAR file you provide based on some configuration settings.
 It will then invoke the function for each request.
+When used in a function service like [riff on Knative](https://projectriff.io/), the invoker boot application is provided by the platform when functions are built.
 
 ## How To Use It
 
