@@ -151,7 +151,7 @@ Now you can build and deploy your function from the base directory of your app s
 riff function create java upper --local-path . --image dev.local/upper:v1
 ```
 
-You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
+> NOTE: You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
 If the specified image tag already exists in the Docker daemon then Kubernetes will use it since `IfNotPresent` is the default pull policy.
 
 Once the function is up and running you can invoke it using:
