@@ -13,7 +13,7 @@ When used in a function service like [riff on Knative](https://projectriff.io/),
 ### Function source
 
 You need to configure a Maven or Gradle project for your function.
-If you use Spring Boot then we recommend using [Spring Initializr](https://start.spring.io/) to bootsrap your project.
+If you use Spring Boot then we recommend using [Spring Initializr](https://start.spring.io/) to bootstrap your project.
 If you are not using Spring Boot for your function code then you need to create your own build configuration.
 There are no required dependencies from the Java Function Invoker, it only requires that your function implements the `java.util.function.Function` interface.
 
