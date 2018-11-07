@@ -139,13 +139,6 @@ To build and deploy your function locally you can use the `riff` CLI which can b
 
 You also need to have riff and Knative installed on a local [Minikube](https://projectriff.io/docs/getting-started/minikube/) or [Docker for Mac](https://projectriff.io/docs/getting-started/docker-for-mac/) cluster, just follow the instructions we linked to.
 
-Make sure that you initialize the default namespace with your Docker ID and that you enter your password when prompted:
-
-```sh
-export DOCKER_ID=<your Docker ID>
-riff namespace init default --dockerhub $DOCKER_ID
-```
-
 If you are using Minikube then you should configure Docker to use the Docker environment running in Minikube:
 
 ```sh
