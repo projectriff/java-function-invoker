@@ -60,13 +60,6 @@ public class UppercaseApplication {
 }
 ```
 
-You also need a small config file that specifies the startup class or bean for your function.
-Create a `riff.toml` file in the base directory of your app source with the following content:
-
-```
-handler = "uppercase"
-```
-
 #### Function handler
 
 The simplest form of the handler is a bean name or a class name that can be instantiated (with a default constructor).
@@ -109,31 +102,6 @@ The [riff project](https://github.com/projectriff/riff) provides its own [buildp
 
 For the remainder of this document we will be using the riff buildpack to build and package our functions.
 
-### Building and testing locally
-
-You can use the `pack` CLI to build and test your functions locally.
-Install the CLI from the [buildpack/pack release page](https://github.com/buildpack/pack/releases).
-
-From the base directory of your app source, you can build locally using:
-
-```sh
-pack build --builder projectriff/builder --path . dev.local/upper
-```
-
-When the build completes you should have a new Docker image named `dev.local/upper` created.
-We can start that image using:
-
-```sh
-docker run -p 8080:8080 dev.local/upper:latest
-```
-
-Once the app starts up we can send a request to the app and see the reply:
-
-```sh
-curl localhost:8080 -H 'Content-Type: text/plain' -w '\n' -d hello
-HELLO
-```
-
 ### Building and deploying functions to local cluster
 
 To build and deploy your function locally you can use the `riff` CLI which can be installed following the instructions on the [riff Release page](https://github.com/projectriff/riff/releases).
@@ -146,12 +114,11 @@ If you are using Minikube then you should configure Docker to use the Docker env
 eval $(minikube docker-env)
 ```
 
-Now you can build and deploy your function from the base directory of your app source using:
+Now you can build and deploy your function from the base directory of your app source. You need to provide the `--handler` option (see above for different handler types). To build a Boot app with a function bean, use:
 
 ```sh
-riff function create java upper --local-path . --image dev.local/upper:v1
+riff function create java upper --handler upper --local-path . --image dev.local/upper:v1
 ```
-
 > NOTE: You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
 If the specified image tag already exists in the Docker daemon then Kubernetes will use it since `IfNotPresent` is the default pull policy.
 
@@ -182,7 +149,7 @@ riff namespace init default --gcr gcr-storage-admin.json
 
 You need to push your function source to a Git repo and provide the URL for the command that creates the function.
 
-Now you can build and deploy your function from this Git repo using:
+Now you can build and deploy your function from this Git repo. You need to provide the `--handler` option (see above for different handler types). To build a Boot app with a function bean, use:
 
 ```sh
 export GCP_PROJECT=$(gcloud config get-value core/project)
@@ -190,7 +157,7 @@ export GIT_REPO=https://github.com/trisberg/upper.git
 riff function create java upper --git-repo $GIT_REPO --handler upper --image gcr.io/$GCP_PROJECT/upper-new --verbose
 ```
 
-> NOTE: You need to provide the `--handler` option since the cluster build will override any value in the `riff.toml` file. This makes it possible to have multiple function beans in the same source repository and just refer to the one you want to use at deployment time.
+> NOTE: It is possible to have multiple function beans in the same source repository and just refer to the one you want to use at build time using the `--handler` option.
 
 Once the function is up and running you can invoke it using:
 
