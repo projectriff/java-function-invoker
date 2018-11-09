@@ -94,7 +94,7 @@ handler=greeter
 Example with Spring application context and an explicit main
 
 ```
-handler=greeter&main=functions.FunctionApp
+handler='greeter&main=functions.FunctionApp'
 ```
 
 #### Function samples
