@@ -49,7 +49,8 @@ public class ApplicationRunnerTests {
 				FunctionApp.class.getName());
 		runner.run(
 				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler",
-				"--server.port=0");
+				"--server.port=0",
+				"--spring.functional.enabled=false");
 		assertThat(runner.containsBean(TomcatServletWebServerFactory.class.getName()))
 				.isTrue();
 		runner.close();

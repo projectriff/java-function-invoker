@@ -17,6 +17,9 @@
 package io.projectriff.invoker;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.function.deployer.ApplicationBootstrap;
@@ -39,8 +42,23 @@ public class JavaFunctionInvokerApplication {
 	public void run(String... args) {
 		if (bootstrap == null) {
 			bootstrap = new ApplicationBootstrap();
-			bootstrap.run(JavaFunctionInvokerApplication.class, args);
+			bootstrap.run(JavaFunctionInvokerApplication.class, args(args));
 		}
+	}
+
+	private String[] args(String[] args) {
+		List<String> list = new ArrayList<>(Arrays.asList(args));
+		boolean functional = false;
+		for (String arg : list) {
+			if (arg.startsWith("--spring.functional.enabled")) {
+				functional = true;
+				break;
+			}
+		}
+		if (!functional) {
+			list.add("--spring.functional.enabled=false");
+		}
+		return list.toArray(new String[0]);
 	}
 
 	public void close() {

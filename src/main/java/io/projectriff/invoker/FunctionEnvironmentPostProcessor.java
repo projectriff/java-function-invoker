@@ -26,7 +26,6 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,18 +47,19 @@ public class FunctionEnvironmentPostProcessor implements EnvironmentPostProcesso
 		if (StringUtils.hasText(uri)) {
 			Map<String, Object> map = new HashMap<String, Object>();
 			Matcher m = uriPattern.matcher(uri);
-			Assert.isTrue(m.matches(),
-					"expected format: <jarLocation>?handler=<className>[&main=<className>]");
+			boolean matches = m.matches();
 
-			String jarLocation = m.group(1);
-			String className = m.group(2);
-			String rest = m.group(3);
+			String jarLocation = matches ? m.group(1) : uri;
+			String className = matches ? m.group(2) : null;
+			String rest = matches ? m.group(3) : null;
 			if (rest != null && rest.startsWith("main=")) {
 				map.put("function.main", rest.substring("main=".length()));
 			}
 
 			map.put("function.location", jarLocation);
-			map.put("function.bean", className);
+			if (className != null && className.trim().length()>0) {
+				map.put("function.bean", className);
+			}
 			addOrReplace(environment.getPropertySources(), map);
 		}
 	}
