@@ -54,13 +54,23 @@ public class FunctionEnvironmentPostProcessorTests {
 		assertThat(environment.getProperty("function.main")).isEqualTo("FooFuncs");
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void uriWithNoHandler() {
 		TestPropertyValues.of("function.uri=file:target/test-classes")
 				.applyTo(environment);
 		processor.postProcessEnvironment(environment, null);
 		assertThat(environment.getProperty("function.location"))
 				.isEqualTo("file:target/test-classes");
+		assertThat(environment.getProperty("function.bean")).isNull();
+	}
+
+	@Test
+	public void uriWithNoEmptyHandler() {
+		TestPropertyValues.of("function.uri=file:target/test-classes?handler=")
+				.applyTo(environment);
+		processor.postProcessEnvironment(environment, null);
+		assertThat(environment.getProperty("function.location"))
+				.isEqualTo("file:target/test-classes?handler=");
 		assertThat(environment.getProperty("function.bean")).isNull();
 	}
 
