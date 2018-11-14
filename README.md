@@ -114,11 +114,14 @@ If you are using Minikube then you should configure Docker to use the Docker env
 eval $(minikube docker-env)
 ```
 
-Now you can build and deploy your function from the base directory of your app source. You need to provide the `--handler` option (see above for different handler types). To build a Boot app with a function bean, use:
+Now you can build and deploy your function from the base directory of your app source. You need to provide the `--handler` option (see above for different handler types).
+To build a Boot app with a function bean, use:
 
 ```sh
 riff function create java upper --handler upper --local-path . --image dev.local/upper:v1
 ```
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it.
+
 > NOTE: You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
 If the specified image tag already exists in the Docker daemon then Kubernetes will use it since `IfNotPresent` is the default pull policy.
 
@@ -156,8 +159,7 @@ export GCP_PROJECT=$(gcloud config get-value core/project)
 export GIT_REPO=https://github.com/trisberg/upper.git
 riff function create java upper --git-repo $GIT_REPO --handler upper --image gcr.io/$GCP_PROJECT/upper-new --verbose
 ```
-
-> NOTE: It is possible to have multiple function beans in the same source repository and just refer to the one you want to use at build time using the `--handler` option.
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. It is possible to have multiple function beans in the same source repository and just refer to the one you want to use when creating the riff function using the `--handler` option.
 
 Once the function is up and running you can invoke it using:
 
