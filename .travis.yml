@@ -8,15 +8,8 @@ matrix:
   include:
   - stage: test
     script: ./mvnw clean test -U
-  - stage: publish
-    sudo: required
-    services:
-    - docker
-    script: "./.travis.docker-push.sh"
 stages:
 - test
-- name: publish
-  if: branch = master AND type = push
 notifications:
   slack:
     secure: vzrpfYMu7F+xVOAY1MKFnbUbztJ6ReqtmKCbyWLXfNxfa0+Wfz7H039w8Oa+jBwRAGt0z3cquGV0DftJlKnYy+KfOtE6PMX+rHZh0G2w277UCiL3Hp6J4RKq/+PRv9+N7cCwcbhuLOtyZK1t4BGIhKRwdWGyO1iIGGfXsvviI4Z8eMP8J4upjX4nVmH+pU7D1y4lwu6wSAgevXtP1s/0rPKu0+rSAcJD5ilnTxKYsijn+L6eTTOaaBm/ZjtBfoB6wt4Z2SKIc2WNx+C7j4w8LRTaOYFs979mvNoz8kKGIjMWIkjurmoIXF0UVlaK8tq2FHvbGcZKyBTJtSieLA/nJ4qmW9I3wqEI623lewY9LqkGZ5KuH8KHss7qLl+0PpVTkoKEw3eszjHMHRoMWPmaQjmCz4z87DfGU8RwP07YPJDvJQdRIoFMVYgs9Bmx5+aJKM2bYFYrkyWIAd8hnnlt9Wakl9VDJvfZARpRFCZnG+GTR2hSWMGygZUQ/ME4lkrxIuCXHSI9o8NrQ8Vnv223QNDNpTduuFrnO922Nnm51by8aOrRRXiQzD7gmzOQILPoXCjVPEMQcvdVQng5ARUnIHJYmO4JGvpe3wVUFfW4EQPHk56KsrDTKo5kBWXDo2qzflMH3zoxX0oMx6hAqmztfZMsnNHYq0HKoQ3pO26s0Yg=
