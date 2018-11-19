@@ -146,12 +146,12 @@ Now you can build and deploy your function from the base directory of your app s
 To build the `uppercase` sample Boot app that is using a function bean, use:
 
 ```sh
-riff function create java uppercase --handler uppercase --local-path . --image dev.local/uppercase:v1
+riff function create uppercase --handler uppercase --local-path . --image dev.local/uppercase:v1
 ```
-> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. You can also omit the `--handler` if the JAR manifest has a `Function-Class` entry.
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` flag since the invoker is able to automatically detect it. You can also omit the `--handler` flag if the JAR manifest has a `Function-Class` entry.
 
 > NOTE: You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
-If the specified image tag already exists in the Docker daemon then Kubernetes will use it since `IfNotPresent` is the default pull policy.
+The default pull policy is `IfNotPresent` which means that Kubernetes will always attempt to pull the latest image from the registry unless there is a tag specified.
 
 Once the function is up and running you can invoke it using:
 
@@ -186,9 +186,10 @@ To build with a plain Java function, you can use:
 
 ```sh
 export GCP_PROJECT=$(gcloud config get-value core/project)
-export GIT_REPO= https://github.com/projectriff-samples/java-hello.git
-riff function create java Hello --git-repo $GIT_REPO --handler functions.Hello --image gcr.io/$GCP_PROJECT/java-hello --verbose
+export GIT_REPO=https://github.com/projectriff-samples/java-hello.git
+riff function create hello --git-repo $GIT_REPO --handler functions.Hello --image gcr.io/$GCP_PROJECT/java-hello --verbose
 ```
+
 > NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. You can also omit the `--handler` if the JAR manifest has a `Function-Class` entry.
 
 > NOTE: It is possible to have multiple function beans in the same source repository and just refer to the one you want to use when creating the riff function using the `--handler` option.
