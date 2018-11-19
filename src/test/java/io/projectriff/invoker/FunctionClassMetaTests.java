@@ -78,16 +78,16 @@ public class FunctionClassMetaTests {
 	}
 
 	@Test
-	public void withHandler() throws Exception {
+	public void withHandlerOverride() throws Exception {
 		runner.run("--server.port=" + port,
-				"--function.uri=" + sampleJar.toURI() + "?handler=functions.Greeter");
+				"--function.uri=" + sampleJar.toURI() + "?handler=functions.Upper");
 		ResponseEntity<String> result = rest
 				.exchange(
 						RequestEntity.post(new URI("http://localhost:" + port + "/"))
 								.contentType(MediaType.TEXT_PLAIN).body("World"),
 						String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("Hello World");
+		assertThat(result.getBody()).isEqualTo("WORLD");
 	}
 
 }
