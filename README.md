@@ -1,4 +1,3 @@
-
 # Java Function Invoker [![Build Status](https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master)](https://travis-ci.org/projectriff/java-function-invoker)
 
 ## What It Does
@@ -60,8 +59,37 @@ public class UppercaseApplication {
 }
 ```
 
+#### Function detection
+
+Spring Cloud Function will attempt to detect the function from the function source.
+If you have a single function declared with `@Bean` in a Spring Boot app then that is the function that will be used.
+If you have multiple functions in the source then you have to specify which one you want using a handler (see the next section).
+
+If you have a Plain Java class with a function then you can provide a `Function-Class` entry in the JAR file manifest to indicate which function class to use.
+Here is an example of using a plug-in for Maven to add this information to the manifest:
+
+```xml
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Function-Class>functions.Greeter</Function-Class>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+```
+
 #### Function handler
 
+If your function can't be automatically detected then you need to provide a handler specification.
 The simplest form of the handler is a bean name or a class name that can be instantiated (with a default constructor).
 More complex creation scenarios can be handled by giving the handler in the form `<bean>[&main=<main>]` where
 
@@ -115,12 +143,12 @@ eval $(minikube docker-env)
 ```
 
 Now you can build and deploy your function from the base directory of your app source. You need to provide the `--handler` option (see above for different handler types).
-To build a Boot app with a function bean, use:
+To build the `uppercase` sample Boot app that is using a function bean, use:
 
 ```sh
-riff function create java upper --handler upper --local-path . --image dev.local/upper:v1
+riff function create java uppercase --handler uppercase --local-path . --image dev.local/uppercase:v1
 ```
-> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it.
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. You can also omit the `--handler` if the JAR manifest has a `Function-Class` entry.
 
 > NOTE: You need to provide a tag for the image to avoid Kubernetes trying to download the latest version of the image.
 If the specified image tag already exists in the Docker daemon then Kubernetes will use it since `IfNotPresent` is the default pull policy.
@@ -151,60 +179,50 @@ riff namespace init default --gcr gcr-storage-admin.json
 ```
 
 You need to push your function source to a Git repo and provide the URL for the command that creates the function.
+Here we are using a [sample function from the riff samples](https://github.com/projectriff-samples/java-hello).
 
-Now you can build and deploy your function from this Git repo. You need to provide the `--handler` option (see above for different handler types). To build a Boot app with a function bean, use:
+Now you can build and deploy your function from this Git repo. You need to provide the `--handler` option (see above for different handler types).
+To build with a plain Java function, you can use:
 
 ```sh
 export GCP_PROJECT=$(gcloud config get-value core/project)
-export GIT_REPO=https://github.com/trisberg/upper.git
-riff function create java upper --git-repo $GIT_REPO --handler upper --image gcr.io/$GCP_PROJECT/upper-new --verbose
+export GIT_REPO= https://github.com/projectriff-samples/java-hello.git
+riff function create java Hello --git-repo $GIT_REPO --handler functions.Hello --image gcr.io/$GCP_PROJECT/java-hello --verbose
 ```
-> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. It is possible to have multiple function beans in the same source repository and just refer to the one you want to use when creating the riff function using the `--handler` option.
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `--handler` options since the invoker is able to automatically detect it. You can also omit the `--handler` if the JAR manifest has a `Function-Class` entry.
+
+> NOTE: It is possible to have multiple function beans in the same source repository and just refer to the one you want to use when creating the riff function using the `--handler` option.
 
 Once the function is up and running you can invoke it using:
 
 ```sh
-riff service invoke upper --text -- -w '\n' -d "hello world"
+riff service invoke hello --text -- -w '\n' -d "world"
 ```
 
 To delete the function use:
 
 ```sh
-riff service delete upper
+riff service delete hello
 ```
 
 ## How it Works
 
-As long as the dependencies are included in the archive correctly, you
-can supply a `Function` with a wide range of input and output
-types. The input or output types can be plain JDK classes, or POJOs
-defined in your archive, or `Message` (from `spring-messaging`) or
-`Publisher` (from `reactive-streams`) or `Flux` or `Mono` (from
-`reactor-core`). The `Message` type will give you access to header
-metadata in the incoming and outgoing messages. If the input or output
-is either a `Publisher` or a `Message` (or a `Publisher<Message>`)
-then both input and output must be in the same form, with possibly
-different payload types, obviously. POJOs are converted from incoming
-messages assuming the payload is JSON ans using the GSON library.
+As long as the dependencies are included in the archive correctly, you can supply a `Function` with a wide range of input and output types.
+The input or output types can be plain JDK classes, or POJOs defined in your archive, or `Message` (from `spring-messaging`) or `Publisher` (from `reactive-streams`) or `Flux` or `Mono` (from `reactor-core`).
+The `Message` type will give you access to header metadata in the incoming and outgoing messages.
+If the input or output is either a `Publisher` or a `Message` (or a `Publisher<Message>`) then both input and output must be in the same form, with possibly different payload types, obviously. POJOs are converted from incoming messages assuming the payload is JSON and using the GSON library.
 
-The invoker is a [Spring Boot](https://projects.spring.io/spring-boot)
-application with a configuration key `function.uri` that can be used
-to point to a `java.util.function.Function`. Because of the way Spring
-Boot works you can use an environment variable `FUNCTION_URI` or a
-System property `function.uri` or a command line argument
-`--function.uri` (amongst other options). Its value points to a
-classpath archive, which can be a jar file or a directory, together
-with parameters:
+The invoker is a [Spring Boot](https://projects.spring.io/spring-boot) application with a configuration key `function.uri` that can be used to point to a `java.util.function.Function`.
+Because of the way Spring Boot works you can use an environment variable `FUNCTION_URI` or a System property `function.uri` or a command line argument `--function.uri` (amongst other options).
+Its value points to a classpath archive, which can be a jar file or a directory, together with parameters:
 
-* `handler`: the class name of a `Function` to execute, or a bean name of a `Function`. Can also be a
-  comma, or pipe-separated list of functions, which are composed
-  together at runtime.
-* `main`: (optional) the class name of a Spring `@Configuration` that
-  can be used to create a Spring application context, in which the
-  `handler` is defined.
+* `handler`: the class name of a `Function` to execute, or a bean name of a `Function`. Can also be a comma, or pipe-separated list of functions, which are composed together at runtime.
 
-The jar archive can also be a comma-separated list of archive
-locations, in case you need to compose things together.
+* `main`: (optional) the class name of a Spring `@Configuration` that can be used to create a Spring application context, in which the `handler` is defined.
+
+The jar archive can also be a comma-separated list of archive locations, in case you need to compose things together.
+
+> NOTE: If your Spring Boot application contains a single function bean, then you can omit the `handler` and `main` parameters since the function can be automatically detected. You can also omit the the `handler` and `main` parameters if the JAR manifest has a `Function-Class` entry.
 
 Examples:
 
