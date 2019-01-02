@@ -1,4 +1,4 @@
-# Java Function Invoker [![Build Status](https://travis-ci.org/projectriff/java-function-invoker.svg?branch=master)](https://travis-ci.org/projectriff/java-function-invoker)
+# Java Function Invoker [![Build Status](https://travis-ci.com/projectriff/java-function-invoker.svg?branch=master)](https://travis-ci.com/projectriff/java-function-invoker)
 
 ## What It Does
 
