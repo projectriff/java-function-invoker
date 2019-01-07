@@ -94,6 +94,7 @@ public class JavaFunctionInvokerApplication
 		if (!functional) {
 			list.add("--spring.functional.enabled=false");
 		}
+		System.setProperty("reactor.logging.fallback", "JDK");
 		return list.toArray(new String[0]);
 	}
 
