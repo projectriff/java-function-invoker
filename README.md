@@ -230,23 +230,23 @@ Examples:
 * A jar file
 
 ```
-file:target/app.jar&handler=functions.Greeter
+file:target/app.jar?handler=functions.Greeter
 ```
 
 * A Spring app (with `spring-cloud-function-context`) and function specified by bean class
 
 ```
-file:target/app.jar&handler=functions.Greeter&main=functions.Application
+file:target/app.jar?handler=functions.Greeter&main=functions.Application
 ```
 
 * A Spring app and function specified by bean name
 
 ```
-file:target/app.jar&handler=greeter&main=functions.Application
+file:target/app.jar?handler=greeter&main=functions.Application
 ```
 
 * A Spring app split between 2 jar files
 
 ```
-file:target/app.jar,file:target/lib.jar&handler=greeter&main=functions.Application
+file:target/app.jar,file:target/lib.jar?handler=greeter&main=functions.Application
 ```

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package io.projectriff.invoker;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.core.env.StandardEnvironment;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
+ * @author David Turanski
  *
  */
 public class FunctionEnvironmentPostProcessorTests {
@@ -31,6 +34,9 @@ public class FunctionEnvironmentPostProcessorTests {
 	private FunctionEnvironmentPostProcessor processor = new FunctionEnvironmentPostProcessor();
 
 	private StandardEnvironment environment = new StandardEnvironment();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@Test
 	public void uriWithHandler() {
@@ -55,6 +61,18 @@ public class FunctionEnvironmentPostProcessorTests {
 	}
 
 	@Test
+	public void uriWithMainOnly() {
+		TestPropertyValues
+			.of("function.uri=file:target/test-classes?main=FooFuncs")
+			.applyTo(environment);
+		processor.postProcessEnvironment(environment, null);
+		assertThat(environment.getProperty("function.location"))
+			.isEqualTo("file:target/test-classes");
+		assertThat(environment.getProperty("function.bean")).isNull();
+		assertThat(environment.getProperty("function.main")).isEqualTo("FooFuncs");
+	}
+
+	@Test
 	public void uriWithNoHandler() {
 		TestPropertyValues.of("function.uri=file:target/test-classes")
 				.applyTo(environment);
@@ -70,8 +88,40 @@ public class FunctionEnvironmentPostProcessorTests {
 				.applyTo(environment);
 		processor.postProcessEnvironment(environment, null);
 		assertThat(environment.getProperty("function.location"))
-				.isEqualTo("file:target/test-classes?handler=");
+				.isEqualTo("file:target/test-classes");
 		assertThat(environment.getProperty("function.bean")).isNull();
+	}
+
+	@Test
+	public void uriWithNoProtocol() {
+		TestPropertyValues.of("function.uri=target/test-classes")
+			.applyTo(environment);
+		processor.postProcessEnvironment(environment, null);
+		assertThat(environment.getProperty("function.location"))
+			.isEqualTo("file:target/test-classes");
+	}
+
+	@Test
+	public void uriWithAppProtocol() {
+		TestPropertyValues.of("function.uri=app:classpath?handler=io.projectriff.functions.Doubler")
+			.applyTo(environment);
+		processor.postProcessEnvironment(environment, null);
+		assertThat(environment.getProperty("function.location"))
+			.isEqualTo("app:classpath");
+		assertThat(environment.getProperty("function.bean"))
+			.isEqualTo("io.projectriff.functions.Doubler");
+	}
+
+	@Test
+	public void invalidUrl() {
+		TestPropertyValues
+			.of("function.uri=file:target/test-classes&handler=foo&main=FooFuncs")
+			.applyTo(environment);
+		processor.postProcessEnvironment(environment, null);
+		assertThat(environment.getProperty("function.location"))
+			.isEqualTo("file:target/test-classes&handler=foo&main=FooFuncs");
+		assertThat(environment.getProperty("function.bean")).isNull();
+		assertThat(environment.getProperty("function.main")).isNull();
 	}
 
 }
