@@ -18,7 +18,6 @@ package io.projectriff.invoker;
 
 import java.net.URI;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,7 +43,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DirtiesContext
 @TestPropertySource(properties = { "function.uri=file:target/test-classes"
 		+ "?handler=io.projectriff.functions.Doubler,io.projectriff.functions.Frenchizer" })
-@Ignore("Not working with reactive / functional configuration, yet")
 public class ComposedJavaFunctionInvokerApplicationTests {
 
 	@Autowired
