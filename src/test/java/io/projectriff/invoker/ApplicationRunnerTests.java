@@ -21,7 +21,7 @@ import io.projectriff.functions.FunctionApp;
 
 import org.junit.Test;
 
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.cloud.function.deployer.ApplicationRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +38,7 @@ public class ApplicationRunnerTests {
 		runner.run("--spring.main.web-application-type=NONE");
 		assertThat(runner.containsBean(Doubler.class.getName())).isTrue();
 		assertThat(runner.getBean(Doubler.class.getName())).isNotNull();
-		assertThat(runner.containsBean(TomcatServletWebServerFactory.class.getName()))
+		assertThat(runner.containsBean(ReactiveWebServerFactory.class.getName()))
 				.isFalse();
 		runner.close();
 	}
@@ -49,9 +49,8 @@ public class ApplicationRunnerTests {
 				FunctionApp.class.getName());
 		runner.run(
 				"--function.uri=app:classpath?handler=io.projectriff.functions.Doubler",
-				"--server.port=0",
-				"--spring.functional.enabled=false");
-		assertThat(runner.containsBean(TomcatServletWebServerFactory.class.getName()))
+				"--server.port=0", "--spring.functional.enabled=false");
+		assertThat(runner.containsBean(ReactiveWebServerFactory.class.getName()))
 				.isTrue();
 		runner.close();
 	}

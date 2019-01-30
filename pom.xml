@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -11,7 +12,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.1.RELEASE</version>
+		<version>2.1.2.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -19,7 +20,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<spring-cloud-function.version>2.0.0.RC2</spring-cloud-function.version>
+		<spring-cloud-function.version>2.0.1.BUILD-SNAPSHOT</spring-cloud-function.version>
+		<skip.invoke>true</skip.invoke>
 	</properties>
 
 	<dependencies>
@@ -29,25 +31,17 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-json</artifactId>
-				</exclusion>
-				<exclusion>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-validator</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -132,6 +126,7 @@
 				<artifactId>maven-invoker-plugin</artifactId>
 				<configuration>
 					<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+					<skipInvocation>${skip.invoke}</skipInvocation>
 				</configuration>
 				<executions>
 					<execution>
@@ -144,7 +139,6 @@
 							<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
 							<settingsFile>src/it/settings.xml</settingsFile>
 							<addTestClassPath>true</addTestClassPath>
-							<skipInvocation>${skipTests}</skipInvocation>
 							<streamLogs>true</streamLogs>
 						</configuration>
 					</execution>
@@ -253,6 +247,17 @@
 					</snapshots>
 				</pluginRepository>
 			</pluginRepositories>
+		</profile>
+		<profile>
+			<id>invoke</id>
+			<activation>
+				<file>
+					<missing>target/it/simple/pom.xml</missing>
+				</file>
+			</activation>
+			<properties>
+				<skip.invoke>false</skip.invoke>
+			</properties>
 		</profile>
 	</profiles>
 </project>

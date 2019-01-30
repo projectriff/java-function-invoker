@@ -67,7 +67,9 @@ public class FunctionalTests {
 
 	@Test
 	public void fatJar() throws Exception {
-		runner.run("--server.port=" + port, "--function.uri=" + sampleJar.toURI());
+		runner.run("--server.port=" + port, "--function.uri=" + sampleJar.toURI(),
+				"--spring.functional.enabled=true");
+		Thread.sleep(1000L); // Sometimes netty hasn't quite started yet
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("http://localhost:" + port + "/"))
 				.contentType(MediaType.APPLICATION_JSON).body("{\"value\":\"FOO\"}"),

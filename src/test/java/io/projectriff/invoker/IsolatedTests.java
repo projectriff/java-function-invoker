@@ -129,7 +129,7 @@ public class IsolatedTests {
 
 	@Test
 	public void mainClassBeanName() throws Exception {
-		runner.run("--server.port=" + port, "--function.uri=app:classpath?"
+		runner.run("--server.port=" + port, "--function.uri=app:classpath,file:target/test-classes?"
 				+ "handler=myDoubler&" + "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest
 				.exchange(
@@ -143,7 +143,7 @@ public class IsolatedTests {
 	@Test
 	public void mainClassBeanType() throws Exception {
 		runner.run("--server.port=" + port,
-				"--function.uri=app:classpath?"
+				"--function.uri=app:classpath,file:target/test-classes?"
 						+ "handler=io.projectriff.functions.Doubler&"
 						+ "main=io.projectriff.functions.FunctionApp");
 		ResponseEntity<String> result = rest

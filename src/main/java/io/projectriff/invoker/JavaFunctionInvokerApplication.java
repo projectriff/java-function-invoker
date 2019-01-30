@@ -22,8 +22,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.deployer.resource.maven.MavenProperties;
+import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
 import org.springframework.cloud.function.deployer.ApplicationBootstrap;
 import org.springframework.cloud.function.deployer.EnableFunctionDeployer;
+import org.springframework.cloud.function.deployer.FunctionDeployerConfiguration;
+import org.springframework.cloud.function.deployer.FunctionProperties;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Mark Fisher
@@ -31,12 +38,41 @@ import org.springframework.cloud.function.deployer.EnableFunctionDeployer;
  */
 @SpringBootApplication
 @EnableFunctionDeployer
-public class JavaFunctionInvokerApplication {
+public class JavaFunctionInvokerApplication
+		implements ApplicationContextInitializer<GenericApplicationContext> {
 
 	private ApplicationBootstrap bootstrap;
 
 	public static void main(String[] args) throws IOException {
 		new JavaFunctionInvokerApplication().run(args);
+	}
+
+	@Override
+	public void initialize(GenericApplicationContext context) {
+		context.registerBean(FunctionDeployerConfiguration.class,
+				() -> new FunctionDeployerConfiguration());
+		context.registerBean(
+				"org.springframework.cloud.function.deployer.FunctionCreatorConfiguration",
+				ClassUtils.resolveClassName(
+						"org.springframework.cloud.function.deployer.FunctionCreatorConfiguration",
+						context.getClassLoader()));
+		context.registerBean(
+				MavenProperties.class, () -> context
+						.getBean(FunctionDeployerConfiguration.class).mavenProperties(),
+				def -> {
+					def.setFactoryBeanName(FunctionDeployerConfiguration.class.getName());
+					def.setFactoryMethodName("mavenProperties");
+				});
+		context.registerBean(FunctionProperties.class, () -> context
+				.getBean(FunctionDeployerConfiguration.class).functionProperties(),
+				def -> {
+					def.setFactoryBeanName(FunctionDeployerConfiguration.class.getName());
+					def.setFactoryMethodName("functionProperties");
+				});
+		context.registerBean(DelegatingResourceLoader.class,
+				() -> context.getBean(FunctionDeployerConfiguration.class)
+						.delegatingResourceLoader(
+								context.getBean(MavenProperties.class)));
 	}
 
 	public void run(String... args) {
@@ -58,6 +94,7 @@ public class JavaFunctionInvokerApplication {
 		if (!functional) {
 			list.add("--spring.functional.enabled=false");
 		}
+		System.setProperty("reactor.logging.fallback", "JDK");
 		return list.toArray(new String[0]);
 	}
 
