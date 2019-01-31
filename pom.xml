@@ -19,8 +19,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
-		<spring-cloud-function.version>2.0.1.BUILD-SNAPSHOT</spring-cloud-function.version>
+		<java.version>11</java.version>
+		<spring-cloud-function.version>2.0.1.RELEASE</spring-cloud-function.version>
 		<skip.invoke>true</skip.invoke>
 	</properties>
 
