@@ -15,13 +15,17 @@
  */
 package com.example;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,15 +38,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SampleApplicationTests {
 
+	private HttpHeaders headers;
+
 	@LocalServerPort
 	private int port;
+	private TestRestTemplate rest = new TestRestTemplate();
+
+	@Before
+	public void before() {
+		headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+	}
 
 	@Test
 	public void uppercase() {
-		// TODO: make this work with a JSON stream as well (like in WebFlux)
-		assertThat(new TestRestTemplate().postForObject(
-				"http://localhost:" + port + "/", "[{\"value\":\"foo\"}]",
-				String.class)).isEqualTo("[{\"value\":\"FOO\"}]");
+		assertThat(rest.postForObject("http://localhost:" + port + "/uppercase",
+				new HttpEntity<>("[{\"value\":\"foo\"}]", headers), String.class))
+						.isEqualTo("[{\"value\":\"FOO\"}]");
 	}
 
 }
