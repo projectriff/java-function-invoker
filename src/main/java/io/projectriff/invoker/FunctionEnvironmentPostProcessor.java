@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
  */
 package io.projectriff.invoker;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -30,42 +34,78 @@ import org.springframework.util.StringUtils;
 
 /**
  * Convert the function.uri into properties that can be consumed by the deployer library.
- * 
- * @author Dave Syer
  *
+ * @author Dave Syer
+ * @author David Turanski
  */
 public class FunctionEnvironmentPostProcessor implements EnvironmentPostProcessor {
-
-	private static Pattern uriPattern = Pattern.compile("(.+)\\?.*handler=([^&]+)&?(.*)");
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
-			SpringApplication application) {
-		String uri = environment.getProperty("function.uri");
-		if (StringUtils.hasText(uri)) {
-			Map<String, Object> map = new HashMap<String, Object>();
-			Matcher m = uriPattern.matcher(uri);
-			boolean matches = m.matches();
+		SpringApplication application) {
 
-			String jarLocation = matches ? m.group(1) : uri;
-			String className = matches ? m.group(2) : null;
-			String rest = matches ? m.group(3) : null;
-			if (rest != null && rest.startsWith("main=")) {
-				map.put("function.main", rest.substring("main=".length()));
+		/*
+		 * Stub to resolve non-standard protocols.
+		 */
+		URLStreamHandlerFactory urlStreamHandlerFactory = protocol -> new URLStreamHandler() {
+			@Override
+			protected URLConnection openConnection(URL u) {
+				return null;
+			}
+		};
+
+		URL url;
+
+		if (environment.containsProperty("function.uri")) {
+			try {
+				/*
+				 * Protocol defaults to file:
+				 */
+				url = new URL(new URL("file:dummy"), environment.getProperty("function.uri"),
+					urlStreamHandlerFactory.createURLStreamHandler("app"));
+			}
+			catch (MalformedURLException e) {
+				throw new IllegalArgumentException(String.format("'function.uri' property %s is invalid",
+					environment.getProperty("function.uri")));
 			}
 
-			map.put("function.location", jarLocation);
-			if (className != null && className.trim().length()>0) {
-				map.put("function.bean", className);
-			}
+			Map<String, Object> map = new HashMap<>();
+
+			addQueryParameters(map, url.getQuery());
+
+			map.put("function.location",
+				String.join(":", url.getProtocol(), url.getPath()));
+
 			addOrReplace(environment.getPropertySources(), map);
 		}
 	}
 
+	private void addQueryParameters(Map<String, Object> map, String query) {
+
+		if (StringUtils.hasText(query)) {
+
+			Map<String, String> params = new HashMap<>();
+			Stream.of(query.split("&"))
+				.forEach(s -> {
+					String[] pair = s.split("=");
+					if (pair.length == 2) {
+						params.put(pair[0], pair[1]);
+					}
+				});
+			if (params.containsKey("main")) {
+				map.put("function.main", params.get("main"));
+			}
+
+			if (params.containsKey("handler")) {
+				map.put("function.bean", params.get("handler"));
+			}
+		}
+	}
+
 	private void addOrReplace(MutablePropertySources propertySources,
-			Map<String, Object> map) {
+		Map<String, Object> map) {
 		MapPropertySource target = null;
 		if (propertySources.contains(PROPERTY_SOURCE_NAME)) {
 			PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
