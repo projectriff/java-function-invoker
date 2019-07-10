@@ -1,11 +1,12 @@
-.classpath
-.factorypath
-.project
-.settings/
-.springBeans
-target
-.sts4-cache/
-.attach_*
+/.classpath
+/.factorypath
+/.project
+/.settings/
+/.springBeans
+target/
+/.sts4-cache/
+/.attach_*
 
-.idea/
-*.iml
+/.idea/
+/*.iml
+.DS_Store
