@@ -6,7 +6,6 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -17,6 +16,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.cloud.function.deployer.EnableFunctionDeployer;
 import org.springframework.cloud.function.deployer.FunctionProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,16 +38,16 @@ public class JavaFunctionInvoker {
      * Startup is done in an init methodHandle to work around late initialization needs of the function deployer.
      */
     @Bean(initMethod = "run", destroyMethod = "close")
-    public GrpcRunner grpcRunner(FunctionCatalog functionCatalog, FunctionProperties functionProperties) {
-        return new GrpcRunner(functionCatalog, functionProperties.getName());
+    public GrpcRunner grpcRunner(FunctionCatalog functionCatalog, FunctionInspector functionInspector, FunctionProperties functionProperties) {
+        return new GrpcRunner(functionCatalog, functionInspector, functionProperties.getName());
     }
 
     private static class GrpcRunner {
 
         private Server server;
 
-        public GrpcRunner(FunctionCatalog functionCatalog, String functionName) {
-            GrpcServerAdapter adapter = new GrpcServerAdapter(functionCatalog, functionName);
+        public GrpcRunner(FunctionCatalog functionCatalog, FunctionInspector functionInspector, String functionName) {
+            GrpcServerAdapter adapter = new GrpcServerAdapter(functionCatalog, functionInspector, functionName);
             server = ServerBuilder.forPort(8081).addService(adapter).build();
         }
 
@@ -61,14 +61,17 @@ public class JavaFunctionInvoker {
 
     }
 
+    /*
     @Bean(initMethod = "run", destroyMethod = "close")
     public HttpRunner httpRunner(FunctionCatalog functionCatalog, FunctionProperties functionProperties) {
         return new HttpRunner(functionCatalog, functionProperties.getName());
     }
 
+     */
+
     private static class HttpRunner {
 
-        private static final int PORT = 8080;
+        private static final int PORT = 8089;
         private final ServerBootstrap bootstrap;
         private Channel channel;
 

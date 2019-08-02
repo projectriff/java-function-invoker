@@ -7,32 +7,34 @@ import io.projectriff.invoker.rpc.OutputFrame;
 import io.projectriff.invoker.rpc.OutputSignal;
 import io.projectriff.invoker.rpc.ReactorRiffGrpc;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.function.context.catalog.FunctionInspector;
+import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Signal;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.Arrays;
+import java.lang.reflect.Type;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
     private final FunctionCatalog functionCatalog;
 
+    private final FunctionInspector functionInspector;
+
     private final String functionName;
 
-    public GrpcServerAdapter(FunctionCatalog functionCatalog, String functionName) {
+    GrpcServerAdapter(FunctionCatalog functionCatalog, FunctionInspector functionInspector, String functionName) {
         this.functionCatalog = functionCatalog;
+        this.functionInspector = functionInspector;
         this.functionName = functionName;
     }
 
@@ -43,13 +45,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                     if (!first.hasValue() || !first.get().hasStart()) {
                         return Flux.error(new RuntimeException("Expected first frame to be of type Start"));
                     }
-                    List<List<MimeType>> accept = getExpectedOutputContentTypes(first);
-                    MimeType[] downgraded = accept.stream().map(list -> list.get(0)).toArray(MimeType[]::new);
 
-                    System.out.println("Expecting " + Arrays.asList(downgraded));
+                    String[] accept = getExpectedOutputContentTypes(first);
 
-                    Function<Object, Object> userFn = functionCatalog.lookup(functionName, downgraded);
-                    System.out.println("userFn = " + userFn + "\nnames = " + functionCatalog.getNames(Function.class) + "\n");
+                    Function<Object, Object> userFn = functionCatalog.lookup(functionName, accept);
 
                     return stream
                             .skip(1L)
@@ -60,10 +59,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                 });
     }
 
-    private List<List<MimeType>> getExpectedOutputContentTypes(Signal<? extends InputSignal> first) {
+    private String[] getExpectedOutputContentTypes(Signal<? extends InputSignal> first) {
         InputSignal firstSignal = first.get();
         ProtocolStringList expectedContentTypesList = firstSignal.getStart().getExpectedContentTypesList();
-        return expectedContentTypesList.stream().map(MimeTypeUtils::parseMimeTypes).collect(Collectors.toList());
+        return expectedContentTypesList.toArray(String[]::new);
     }
 
     private Tuple2<Integer, Message<byte[]>> toSpringMessage(InputSignal in) {
@@ -94,7 +93,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     }
 
     private Function<Flux<Tuple2<Integer, Message<byte[]>>>, Flux<Tuple2<Integer, Message<byte[]>>>> invoker(Function<Object, Object> springCloudFunction) {
-        int arity = 2;
+
+        Type functionType = FunctionTypeUtils.getFunctionType(springCloudFunction, this.functionInspector);
+        int arity = FunctionTypeUtils.getInputCount(functionType);
+
         Tuple2<Integer, Message<byte[]>>[] startTuples = new Tuple2[arity];
         for (int i = 0; i < startTuples.length; i++) {
             startTuples[i] = Tuples.of(i, new GenericMessage<>(new byte[0]));
@@ -114,7 +116,6 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                         .flatMapMany(groupList -> {
                             Object[] args = groupList.stream().map(g -> g.skip(1)).toArray(Object[]::new);
                             Object tuple = asTupleOrSingleArg(args);
-
                             Object result = springCloudFunction.apply(tuple);
 
                             Flux<Message<byte[]>>[] bareOutputs = promoteToArray(result);
@@ -138,7 +139,8 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
             }
             return fluxArray;
         } else {
-            return (Flux<Message<byte[]>>[]) result;
+            Flux<Message<byte[]>> item = (Flux<Message<byte[]>>) result;
+            return new Flux[]{item};
         }
     }
 
