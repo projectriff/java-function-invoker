@@ -72,11 +72,19 @@
             <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-function-deployer</artifactId>
         </dependency>
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-function-deployer-new</artifactId>
+            <version>${spring-cloud-function.version}</version>
+        </dependency>
 
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -91,6 +99,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        -->
 
         <dependency>
             <groupId>com.salesforce.servicelibs</groupId>

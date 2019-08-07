@@ -32,7 +32,7 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
     private final String functionName;
 
-    GrpcServerAdapter(FunctionCatalog functionCatalog, FunctionInspector functionInspector, String functionName) {
+    public GrpcServerAdapter(FunctionCatalog functionCatalog, FunctionInspector functionInspector, String functionName) {
         this.functionCatalog = functionCatalog;
         this.functionInspector = functionInspector;
         this.functionName = functionName;
