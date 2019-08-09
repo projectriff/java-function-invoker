@@ -8,12 +8,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class Encode implements Function<Flux<Integer>, Flux<Integer>[]> {
+public class Encode implements Function<Flux<Integer>, Flux<Integer>> {
 
-	public Flux<Integer>[] apply(Flux<Integer> input) {
-		return new Flux[] {input.
+	public Flux<Integer> apply(Flux<Integer> input) {
+		return input.
 			compose(Encode::detectRun).
-			flatMap(buf -> Flux.just(buf.size(), buf.get(0)))};
+			flatMap(buf -> Flux.just(buf.size(), buf.get(0)));
 	}
 	
 	private static Publisher<List<Integer>> detectRun(Flux<Integer> s) {

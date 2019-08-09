@@ -2,9 +2,9 @@ package io.projectriff.invoker;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.projectriff.invoker.client.FunctionClient;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.*;
 import org.junit.rules.TestName;
 import reactor.core.publisher.Flux;
@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -77,7 +78,7 @@ public class IntegrationTest {
     @Test
     public void testStreamingFunction() throws Exception {
         setFunctionLocation("encode-1.0.0-boot");
-        setFunctionBean("com.acme.Encode");
+        setFunctionClass("com.acme.Encode");
         process = processBuilder.start();
 
         Function<Flux<Integer>, Flux<Integer>> fn = new FunctionClient<>(connect(), Integer.class);
@@ -98,10 +99,8 @@ public class IntegrationTest {
     @Test
     public void testStreamingFunctionSharingFluxes() throws Exception {
         setFunctionLocation("repeater-1.0.0-boot");
-        setFunctionBean("com.acme.Repeater");
+        setFunctionClass("com.acme.Repeater");
         process = processBuilder.start();
-
-        //BiFunction<Flux<String>, Flux<Integer>, Flux<?>[]> fn = FunctionProxy.create(BiFunction.class, connect(), String.class, Integer.class);
 
         Function<Tuple2<Flux<String>, Flux<Integer>>, Tuple2<Flux<String>, Flux<Integer>>> fn = new FunctionClient<>(connect(), String.class, Integer.class);
 
@@ -134,25 +133,24 @@ public class IntegrationTest {
      */
     @Test
     public void testFunctionProxyDoesNotStallOnEmptyResponse() throws Exception {
-//        setFunctionLocation("repeater-1.0.0-boot");
-//        setFunctionBean("com.acme.Repeater");
-//        process = processBuilder.start();
-//
-//        BiFunction<Flux<String>, Flux<Integer>, Flux<?>[]> fn = FunctionProxy.create(BiFunction.class, connect(), String.class, Integer.class);
-//
-//        Flux<?>[] result = fn.apply(
-//                Flux.just("one", "two", "three"),
-//                Flux.just(0, 0, 0, 0) // Enough zeroes to trigger a sum (of 2), but emits zero times the words above
-//        );
-//
-//        assertThat(result.length, CoreMatchers.equalTo(2));
-//        StepVerifier.create((Flux<String>) result[0])
-//                .verifyComplete();
-//        StepVerifier.create((Flux<Integer>) result[1])
-//                .expectNext(0)
-//                .expectNext(0)
-//                .expectNext(0)
-//                .verifyComplete();
+        setFunctionLocation("repeater-1.0.0-boot");
+        setFunctionClass("com.acme.Repeater");
+        process = processBuilder.start();
+
+        Function<Tuple2<Flux<String>, Flux<Integer>>, Tuple2<Flux<String>, Flux<Integer>>> fn = new FunctionClient<>(connect(), String.class, Integer.class);
+
+        Tuple2<Flux<String>, Flux<Integer>> result = fn.apply(Tuples.of(
+                Flux.just("one", "two", "three"),
+                Flux.just(0, 0, 0, 0) // Enough zeroes to trigger a sum (of 2), but emits zero times the words above
+        ));
+
+        StepVerifier.create(result.getT1())
+                .verifyComplete();
+        StepVerifier.create(result.getT2())
+                .expectNext(0)
+                .expectNext(0)
+                .expectNext(0)
+                .verifyComplete();
     }
 
     /*
@@ -161,17 +159,17 @@ public class IntegrationTest {
      */
     @Test
     public void testSimplestJarFunction() throws Exception {
-//        setFunctionLocation("hundred-divider-1.0.0");
-//        setFunctionBean("com.acme.HundredDivider");
-//        process = processBuilder.start();
-//
-//        Function<Flux<Integer>, Flux<Integer>[]> function = FunctionProxy.create(Function.class, connect(), Integer.class);
-//
-//        Flux<Integer>[] response = function.apply(Flux.just(1, 2, 4));
-//        assertThat(response.length, CoreMatchers.equalTo(1));
-//        StepVerifier.create(response[0])
-//                .expectNext(100, 50, 25)
-//                .verifyComplete();
+        setFunctionLocation("hundred-divider-1.0.0");
+        setFunctionClass("com.acme.HundredDivider");
+        process = processBuilder.start();
+
+
+        Function<Flux<Integer>, Flux<Integer>> fn = new FunctionClient<>(connect(), Integer.class);
+
+        Flux<Integer> response = fn.apply(Flux.just(1, 2, 4));
+        StepVerifier.create(response)
+                .expectNext(100, 50, 25)
+                .verifyComplete();
 
     }
 
@@ -180,40 +178,43 @@ public class IntegrationTest {
      */
     @Test
     public void testFunctionBean() throws Exception {
-//        setFunctionLocation("repeeater-as-bean-1.0.0-boot");
-//        process = processBuilder.start();
-//
-//        Function<Flux<String>, Flux<Integer>[]> function = FunctionProxy.create(Function.class, connect(), Integer.class);
-//
-//        Flux<Integer>[] response = function.apply(Flux.just("a", "bb", "ccc"));
-//        StepVerifier.create(response[0])
-//                .expectNext(1, 2, 3)
-//                .verifyComplete();
+        setFunctionLocation("repeater-as-bean-1.0.0-boot");
+        process = processBuilder.start();
+
+        Function<Flux<String>, Flux<Integer>> fn = new FunctionClient<>(connect(), Integer.class);
+
+        Flux<Integer> response = fn.apply(Flux.just("a", "bb", "ccc"));
+        StepVerifier.create(response)
+                .expectNext(1, 2, 3)
+                .verifyComplete();
 
     }
 
     /*
-     * This tests a function that is packaged as a spring bean, in a boot uberjar.
+     * This tests a function that accepts multi i/o, packaged as a spring bean, in a boot uberjar.
      */
     @Test
     public void testMulti() throws Exception {
-//        setFunctionLocation("repeater-as-bean-1.0.0-boot");
-//        //setFunctionMain("com.acme.RepeaterApplication");
-//        setFunctionBean("com.acme.MyFn");
-//        //setFunctionBean("com.acme.MyFn");
-//        process = processBuilder.start();
-//
-//        BiFunction<Flux<String>, Flux<Integer>, Flux[]> function = FunctionProxy.create(BiFunction.class, connect(), Double.class, String.class);
-//
-//        Flux<Object>[] response = function.apply(Flux.just("a", "bb", "ccc"), Flux.just(1, 2, 3));
-//        StepVerifier.create(response[0])
-//                .expectNext(1.5d, 2.5d, 3.0d)
-//                .verifyComplete();
-//        StepVerifier.create(response[1])
-//                .expectNext("a")
-//                .expectNext("bb", "bb")
-//                .expectNext("ccc", "ccc", "ccc")
-//                .verifyComplete();
+        setFunctionLocation("repeater-as-bean-1.0.0-boot");
+        setFunctionName("fn");
+        process = processBuilder.start();
+
+        Function<Tuple2<Flux<String>, Flux<Integer>>, Tuple2<Flux<Double>, Flux<String>>> fn = new FunctionClient<>(connect(), Double.class, String.class);
+
+        Tuple2<Flux<Double>, Flux<String>> response = fn.apply(
+                Tuples.of(
+                        Flux.just("a", "bb", "ccc"),
+                        Flux.just(1, 2, 3)
+                )
+        );
+        StepVerifier.create(response.getT1())
+                .expectNext(1.5d, 2.5d, 3.0d)
+                .verifyComplete();
+        StepVerifier.create(response.getT2())
+                .expectNext("a")
+                .expectNext("bb", "bb")
+                .expectNext("ccc", "ccc", "ccc")
+                .verifyComplete();
 
     }
 
@@ -223,23 +224,22 @@ public class IntegrationTest {
     @Test
     @Ignore
     public void testClientError() throws Exception {
-//        setFunctionLocation("hundred-divider-1.0.0");
-//        setFunctionBean("com.acme.HundredDivider");
-//        process = processBuilder.start();
-//
-//        Function<Flux<Integer>, Flux<Integer>[]> function = FunctionProxy.create(Function.class, connect(), Integer.class);
-//
-//
-//        Flux<Integer> input = Flux.concat(
-//                Flux.just(1, 2, 3),
-//                Flux.error(new RuntimeException("Boom")));
-//        // TODO: revise semantics? Using Duraction < 100ms fails immediately
-//        input = Flux.interval(Duration.ofMillis(100)).flatMap(i -> i == 3 ? Flux.error(new RuntimeException("Boom")) : Flux.just(i.intValue() + 1));
-//        Flux<Integer>[] response = function.apply(input //
-//        );
-//        StepVerifier.create(response[0])
-//                .expectNext(100, 50, 33)
-//                .verifyErrorMatches(t -> (t instanceof StatusRuntimeException) && ((StatusRuntimeException) t).getStatus().getCode() == Status.Code.CANCELLED);
+        setFunctionLocation("hundred-divider-1.0.0");
+        setFunctionClass("com.acme.HundredDivider");
+        process = processBuilder.start();
+
+        Function<Flux<Integer>, Flux<Integer>> function = new FunctionClient<>(connect(), Integer.class);
+
+
+        Flux<Integer> input = Flux.concat(
+                Flux.just(1, 2, 3),
+                Flux.error(new RuntimeException("Boom")));
+        // TODO: revise semantics? Using Duraction < 100ms fails immediately
+        input = Flux.interval(Duration.ofMillis(100)).flatMap(i -> i == 3 ? Flux.error(new RuntimeException("Boom")) : Flux.just(i.intValue() + 1));
+        Flux<Integer> response = function.apply(input);
+        StepVerifier.create(response)
+                .expectNext(100, 50, 33)
+                .verifyErrorMatches(t -> (t instanceof StatusRuntimeException) && ((StatusRuntimeException) t).getStatus().getCode() == Status.Code.CANCELLED);
 
     }
 
@@ -248,16 +248,16 @@ public class IntegrationTest {
      */
     @Test
     public void testFunctionError() throws Exception {
-//        setFunctionLocation("hundred-divider-1.0.0");
-//        setFunctionBean("com.acme.HundredDivider");
-//        process = processBuilder.start();
-//
-//        Function<Flux<Integer>, Flux<Integer>[]> function = FunctionProxy.create(Function.class, connect(), Integer.class);
-//
-//        Flux<Integer>[] response = function.apply(Flux.just(1, 2, 0));
-//        StepVerifier.create(response[0])
-//                .expectNext(100, 50)
-//                .verifyErrorMatches(t -> (t instanceof StatusRuntimeException) && ((StatusRuntimeException) t).getStatus().getCode() == Status.Code.UNKNOWN);
+        setFunctionLocation("hundred-divider-1.0.0");
+        setFunctionClass("com.acme.HundredDivider");
+        process = processBuilder.start();
+
+        Function<Flux<Integer>, Flux<Integer>> function = new FunctionClient<>(connect(), Integer.class);
+
+        Flux<Integer> response = function.apply(Flux.just(1, 2, 0));
+        StepVerifier.create(response)
+                .expectNext(100, 50)
+                .verifyErrorMatches(t -> (t instanceof StatusRuntimeException) && ((StatusRuntimeException) t).getStatus().getCode() == Status.Code.UNKNOWN);
 
     }
 
@@ -280,17 +280,17 @@ public class IntegrationTest {
         return channel;
     }
 
-    private String setFunctionMain(String value) {
-        return processBuilder.environment().put("FUNCTION_MAIN", value);
+    private void setFunctionClass(String value) {
+        processBuilder.command().add("--spring.cloud.function.function-class=" + value);
     }
 
-    private String setFunctionBean(String value) {
-        return processBuilder.environment().put("FUNCTION_BEAN", value);
+    private void setFunctionName(String value) {
+        processBuilder.command().add("--spring.cloud.function.function-name=" + value);
     }
 
     private void setFunctionLocation(String jar) {
-        processBuilder.environment().put("FUNCTION_LOCATION",
-                "file://" + new File(String.format("src/test/functions/%s.jar", jar)).getAbsolutePath());
+        processBuilder.command().add("--spring.cloud.function.location=" +
+                new File(String.format("src/test/functions/%s.jar", jar)).getAbsolutePath());
     }
 
 }

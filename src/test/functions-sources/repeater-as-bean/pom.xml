@@ -52,7 +52,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<layout>NONE</layout>
+					<!--layout>NONE</layout-->
 					<outputDirectory>../../functions</outputDirectory>
 					<classifier>boot</classifier>
 				</configuration>

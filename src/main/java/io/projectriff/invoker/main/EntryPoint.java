@@ -26,6 +26,11 @@ public class EntryPoint {
 		Server server = ServerBuilder.forPort(8081).addService(adapter).build();
 		server.start();
 
+		Object o = new Object();
+		synchronized (o) {
+			o.wait();
+		}
+
 	}
 
 }
