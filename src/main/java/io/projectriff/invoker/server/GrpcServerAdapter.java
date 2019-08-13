@@ -24,6 +24,11 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.function.Function;
 
+/**
+ * Reactive gRPC adapter for riff.
+ *
+ * @author Eric Bottard
+ */
 public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
     private final FunctionCatalog functionCatalog;
@@ -114,11 +119,14 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                         .collectSortedList(Comparator.comparingInt(GroupedFlux::key))
 
                         .flatMapMany(groupList -> {
+                            // skip(1) below drops the dummy messages which were introduced above
                             Object[] args = groupList.stream().map(g -> g.skip(1)).toArray(Object[]::new);
                             Object tuple = asTupleOrSingleArg(args);
+                            // apply the function
                             Object result = springCloudFunction.apply(tuple);
 
                             Flux<Message<byte[]>>[] bareOutputs = promoteToArray(result);
+                            // finally, merge all fluxes as Tuple2s with the output index set
                             Flux<Tuple2<Integer, Message<byte[]>>>[] withOutputIndices = new Flux[bareOutputs.length];
                             for (int i = 0; i < bareOutputs.length; i++) {
                                 int j = i;
