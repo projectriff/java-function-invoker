@@ -72,6 +72,20 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- temporary until new release of
+
+			spring-boot-starter-webflux
+				|_ spring-boot-starter-reactor-netty
+					|_ reactor-netty
+						|_ netty*
+			-->
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version>4.1.39.Final</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
