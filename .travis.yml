@@ -5,13 +5,13 @@ cache:
   directories:
   - "$HOME/.m2"
 install:
-  - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -P spring 
+- "./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -P spring"
 matrix:
   include:
   - stage: test
-    script: ./mvnw clean test -U -P spring
+    script: "./mvnw clean test -U -P spring"
 stages:
 - test
 notifications:
   slack:
-    secure: vzrpfYMu7F+xVOAY1MKFnbUbztJ6ReqtmKCbyWLXfNxfa0+Wfz7H039w8Oa+jBwRAGt0z3cquGV0DftJlKnYy+KfOtE6PMX+rHZh0G2w277UCiL3Hp6J4RKq/+PRv9+N7cCwcbhuLOtyZK1t4BGIhKRwdWGyO1iIGGfXsvviI4Z8eMP8J4upjX4nVmH+pU7D1y4lwu6wSAgevXtP1s/0rPKu0+rSAcJD5ilnTxKYsijn+L6eTTOaaBm/ZjtBfoB6wt4Z2SKIc2WNx+C7j4w8LRTaOYFs979mvNoz8kKGIjMWIkjurmoIXF0UVlaK8tq2FHvbGcZKyBTJtSieLA/nJ4qmW9I3wqEI623lewY9LqkGZ5KuH8KHss7qLl+0PpVTkoKEw3eszjHMHRoMWPmaQjmCz4z87DfGU8RwP07YPJDvJQdRIoFMVYgs9Bmx5+aJKM2bYFYrkyWIAd8hnnlt9Wakl9VDJvfZARpRFCZnG+GTR2hSWMGygZUQ/ME4lkrxIuCXHSI9o8NrQ8Vnv223QNDNpTduuFrnO922Nnm51by8aOrRRXiQzD7gmzOQILPoXCjVPEMQcvdVQng5ARUnIHJYmO4JGvpe3wVUFfW4EQPHk56KsrDTKo5kBWXDo2qzflMH3zoxX0oMx6hAqmztfZMsnNHYq0HKoQ3pO26s0Yg=
+    secure: WxZ+HjMsGIj+O4PHTVZIkSi6vVGxRO9XSbYj7HIQq7HglAg5U39oS3KvWDgh04g59HmiiFGLZrQWmOVDbEb/sTjujT0cirCEM4rdvBTK53aVe88nCgj/9PF68phHQCGVBDWqTllZK+OBegue/jHL00mXL/p4GsIhseAxvYNV8DfKvlSKl+Ar1kI4akwG3Kbz4L/I4NM9ZVG6XP3OK9lxXF1dnbRkgLELJ5ffqKklO8dNRINzQbUjLD4ip7Hd68ksXv2Avhzwpa8odXHw34TMFR/nXo19scmT8lhExBclpzFmrGy6wm8REHrO0T/mOE3rI4tnPlgn0oBHExfkhQyjM3Thr8X+Ua+1gW0VGyi70ScJPzqBxj4vio5rA77HzJ5iRHkr+Mi3OGD+inS/yGPJPogEEdewna42sIOmHpzRjZtX3rlQipV9XZLnw9ef8/yIGuz13VJMLpuIK8EaegzibznqTrIdQfDgKb3oI+KrdgBhCv2bQ2Nk3WlcsPM1AR/cSma0b8B7L7Bma3kZZE1e43G5h03At6PCpiidGaZCNF2bHD017I14/kOeC006AE/3peNG0chD5/6N133SBdkBHNLM5OOzxad734oa5MMTuc3KPfoau7w7CTqPX/a613zGfe/3UtHjpJkTcO7itG56s2Nt6uWP/pOwpTHvZ+j35uE=
