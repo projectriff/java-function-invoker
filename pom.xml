@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.7.RELEASE</version>
+		<version>2.1.8.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -69,20 +69,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-function-dependencies</artifactId>
 				<version>${spring-cloud-function.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<!-- temporary until new release of
-
-			spring-boot-starter-webflux
-				|_ spring-boot-starter-reactor-netty
-					|_ reactor-netty
-						|_ netty*
-			-->
-			<dependency>
-				<groupId>io.netty</groupId>
-				<artifactId>netty-bom</artifactId>
-				<version>4.1.39.Final</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
