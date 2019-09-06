@@ -82,14 +82,11 @@
             <artifactId>reactor-grpc-stub</artifactId>
             <version>${reactive-grpc.version}</version>
         </dependency>
-        <!-- Override reactor version to get switchOnFirst() -->
-        <!--
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <version>${reactor.version}</version>
+            <groupId>io.projectreactor.addons</groupId>
+            <artifactId>reactor-extra</artifactId>
+            <scope>runtime</scope><!-- Not needed per-se, but made available in case functions use it (and we want out CL to load it)-->
         </dependency>
-        -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
