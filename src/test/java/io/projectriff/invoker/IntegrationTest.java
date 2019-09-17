@@ -185,7 +185,7 @@ public class IntegrationTest {
     @Test
     public void testMulti() throws Exception {
         setFunctionLocation("repeater-as-bean-1.0.0-boot");
-        setFunctionName("fn");
+        setFunctionDefinition("fn");
         process = processBuilder.start();
 
         Function<Tuple2<Flux<String>, Flux<Integer>>, Tuple2<Flux<Double>, Flux<String>>> fn = FunctionClient.of(connect(), Double.class, String.class);
@@ -273,8 +273,8 @@ public class IntegrationTest {
         processBuilder.command().add("--spring.cloud.function.function-class=" + value);
     }
 
-    private void setFunctionName(String value) {
-        processBuilder.command().add("--spring.cloud.function.function-name=" + value);
+    private void setFunctionDefinition(String value) {
+        processBuilder.command().add("--spring.cloud.function.definition=" + value);
     }
 
     private void setFunctionLocation(String jar) {
