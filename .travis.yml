@@ -1,22 +1,5 @@
 language: java
 jdk:
-<<<<<<< HEAD
-- openjdk11
-cache:
-  directories:
-  - "$HOME/.m2"
-install:
-- "./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -P spring"
-matrix:
-  include:
-  - stage: test
-    script: "./mvnw clean test -U -P spring"
-stages:
-- test
-notifications:
-  slack:
-    secure: WxZ+HjMsGIj+O4PHTVZIkSi6vVGxRO9XSbYj7HIQq7HglAg5U39oS3KvWDgh04g59HmiiFGLZrQWmOVDbEb/sTjujT0cirCEM4rdvBTK53aVe88nCgj/9PF68phHQCGVBDWqTllZK+OBegue/jHL00mXL/p4GsIhseAxvYNV8DfKvlSKl+Ar1kI4akwG3Kbz4L/I4NM9ZVG6XP3OK9lxXF1dnbRkgLELJ5ffqKklO8dNRINzQbUjLD4ip7Hd68ksXv2Avhzwpa8odXHw34TMFR/nXo19scmT8lhExBclpzFmrGy6wm8REHrO0T/mOE3rI4tnPlgn0oBHExfkhQyjM3Thr8X+Ua+1gW0VGyi70ScJPzqBxj4vio5rA77HzJ5iRHkr+Mi3OGD+inS/yGPJPogEEdewna42sIOmHpzRjZtX3rlQipV9XZLnw9ef8/yIGuz13VJMLpuIK8EaegzibznqTrIdQfDgKb3oI+KrdgBhCv2bQ2Nk3WlcsPM1AR/cSma0b8B7L7Bma3kZZE1e43G5h03At6PCpiidGaZCNF2bHD017I14/kOeC006AE/3peNG0chD5/6N133SBdkBHNLM5OOzxad734oa5MMTuc3KPfoau7w7CTqPX/a613zGfe/3UtHjpJkTcO7itG56s2Nt6uWP/pOwpTHvZ+j35uE=
-=======
   - openjdk11
 cache:
   directories:
@@ -28,4 +11,6 @@ deploy:
     script: .travis/publish-gcs.sh
     on:
       branch: master
->>>>>>> Add CI support
+notifications:
+  slack:
+    secure: WxZ+HjMsGIj+O4PHTVZIkSi6vVGxRO9XSbYj7HIQq7HglAg5U39oS3KvWDgh04g59HmiiFGLZrQWmOVDbEb/sTjujT0cirCEM4rdvBTK53aVe88nCgj/9PF68phHQCGVBDWqTllZK+OBegue/jHL00mXL/p4GsIhseAxvYNV8DfKvlSKl+Ar1kI4akwG3Kbz4L/I4NM9ZVG6XP3OK9lxXF1dnbRkgLELJ5ffqKklO8dNRINzQbUjLD4ip7Hd68ksXv2Avhzwpa8odXHw34TMFR/nXo19scmT8lhExBclpzFmrGy6wm8REHrO0T/mOE3rI4tnPlgn0oBHExfkhQyjM3Thr8X+Ua+1gW0VGyi70ScJPzqBxj4vio5rA77HzJ5iRHkr+Mi3OGD+inS/yGPJPogEEdewna42sIOmHpzRjZtX3rlQipV9XZLnw9ef8/yIGuz13VJMLpuIK8EaegzibznqTrIdQfDgKb3oI+KrdgBhCv2bQ2Nk3WlcsPM1AR/cSma0b8B7L7Bma3kZZE1e43G5h03At6PCpiidGaZCNF2bHD017I14/kOeC006AE/3peNG0chD5/6N133SBdkBHNLM5OOzxad734oa5MMTuc3KPfoau7w7CTqPX/a613zGfe/3UtHjpJkTcO7itG56s2Nt6uWP/pOwpTHvZ+j35uE=
