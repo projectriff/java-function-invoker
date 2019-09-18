@@ -9,7 +9,7 @@ script: ./mvnw package integration-test
 deploy:
   skip_cleanup: true
   provider: script
-  script: .travis/publish-gcs.sh
+  script: ".travis/publish-gcs.sh"
   on:
     branch: master
 notifications:
