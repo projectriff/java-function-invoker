@@ -211,7 +211,7 @@ public class IntegrationTest {
      * This tests the client triggering an onError() event.
      */
     @Test
-    //@Ignore
+    @Ignore
     public void testClientError() throws Exception {
         setFunctionLocation("hundred-divider-1.0.0");
         setFunctionClass("com.acme.HundredDivider");
