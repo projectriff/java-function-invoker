@@ -2,7 +2,7 @@
 
 set -Eeuxo pipefail
 
-version=${1:-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)}
+version=${1:-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout | tail -n1)}
 commit=$(git rev-parse HEAD)
 
 gcloud auth activate-service-account --key-file <(echo "$GCLOUD_CLIENT_SECRET" | base64 --decode)
