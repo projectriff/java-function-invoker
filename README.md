@@ -123,4 +123,3 @@ The input or output types can be plain JDK classes, or POJOs defined in your arc
 Input and output types can also be reactor's `TupleX` classes, thus allowing multi I/O functions.
 The `Message` type will give you access to header metadata in the incoming and outgoing messages.
 POJOs are converted from incoming messages / to return values using the `Content-Type` header and the `expectedContentType` field value.
-```
