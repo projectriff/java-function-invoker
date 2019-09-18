@@ -27,7 +27,7 @@ import java.util.function.Function;
  * <p>By default, only a converter for {@code application/json} is set up, but users can override this via {@link #setMessageConverters(AbstractMessageConverter...)}.</p>
  *
  * @param <I> The input type of the function, typycally {@code Flux<T>} or {@code TupleN<Flux<T>, Flux<U>, ...>}
- * @param <>  The output type of the function, typycally {@code Flux<R>} or {@code TupleM<Flux<R>, Flux<S>, ...>}
+ * @param <O>  The output type of the function, typycally {@code Flux<R>} or {@code TupleM<Flux<R>, Flux<S>, ...>}
  * @author Eric Bottard
  */
 public class FunctionClient<I, O> implements Function<I, O> {
@@ -177,8 +177,8 @@ public class FunctionClient<I, O> implements Function<I, O> {
                 .withPayload(s.getData().getPayload().toByteArray())
                 .setHeader(MessageHeaders.CONTENT_TYPE, s.getData().getContentType())
                 .build();
-        Object o = this.messageConverter.fromMessage(m, type);
-        return o;
+
+        return this.messageConverter.fromMessage(m, type);
     }
 
     private InputSignal toRiffSignal(Object value, int index) {
@@ -191,9 +191,9 @@ public class FunctionClient<I, O> implements Function<I, O> {
                 .setContentType(message.getHeaders().get(MessageHeaders.CONTENT_TYPE).toString())
                 .setPayload(ByteString.copyFrom((byte[]) message.getPayload()));
         message.getHeaders().forEach((h, v) -> frame.putHeaders(h, v.toString()));
-        InputSignal signal = InputSignal.newBuilder()
+        
+        return InputSignal.newBuilder()
                 .setData(frame.build())
                 .build();
-        return signal;
     }
 }
