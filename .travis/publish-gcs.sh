@@ -10,7 +10,8 @@ gcloud auth activate-service-account --key-file <(echo "$GCLOUD_CLIENT_SECRET" |
 package=java-function-invoker-${version}.jar
 bucket=gs://projectriff/java-function-invoker/releases
 
+pushd target
 gsutil cp -a public-read "${package}" ${bucket}/v${version}/${package}
 gsutil cp -a public-read "${package}" ${bucket}/v${version}/snapshots/java-function-invoker-${version}-${commit}.jar
 gsutil cp -a public-read "${package}" ${bucket}/latest/java-function-invoker.jar
-
+popd
