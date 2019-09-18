@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -Eeuxo pipefail
+
 version=${1:-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)}
 commit=$(git rev-parse HEAD)
 
