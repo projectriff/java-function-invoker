@@ -4,6 +4,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.projectriff.invoker.rpc.StartFrame;
 import io.projectriff.invoker.server.GrpcServerAdapter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.function.context.FunctionCatalog;
@@ -27,6 +28,9 @@ import java.io.IOException;
 @SpringBootApplication
 public class EntryPoint {
 
+    @Value("#{systemEnvironment['GRPC_PORT'] ?: 8081}")
+    private int grpcPort = 8081;
+
     public static void main(String[] args) throws InterruptedException {
         SpringApplication.run(EntryPoint.class, args);
         Object o = new Object();
@@ -46,7 +50,7 @@ public class EntryPoint {
 
     @Bean
     public SmartLifecycle server(GrpcServerAdapter adapter) {
-        Server server = ServerBuilder.forPort(8081).addService(adapter).build();
+        Server server = ServerBuilder.forPort(grpcPort).addService(adapter).build();
         return new SmartLifecycle() {
 
             private volatile boolean running;
