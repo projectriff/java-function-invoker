@@ -1,5 +1,6 @@
 package io.projectriff.invoker;
 
+import com.acme.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
@@ -7,6 +8,7 @@ import io.grpc.StatusRuntimeException;
 import io.projectriff.invoker.client.FunctionClient;
 import org.junit.*;
 import org.junit.rules.TestName;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
@@ -16,8 +18,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -177,6 +183,61 @@ public class IntegrationTest {
                 .expectNext(100, 50, 25)
                 .verifyComplete();
 
+    }
+
+    /*
+     * This tests the ability to support custom converters provided as part of the function artifact.
+     */
+    @Test
+    @Ignore
+    public void testCustomConverters() throws Exception {
+        setFunctionLocation("custom-converters-1.0.0-boot");
+        process = processBuilder.start();
+
+
+        Function<Flux<CustomInput>, Flux<CustomOutput>> fn = FunctionClient.of(connect(), CustomOutput.class);
+        ((FunctionClient)fn).setMessageConverters(new CustomInputConverter());
+
+        Flux<CustomOutput> response = fn.apply(Flux.just(new CustomInput("hello".getBytes(StandardCharsets.UTF_8))));
+        StepVerifier.create(response)
+                //.expectNext("hellohello".getBytes(StandardCharsets.UTF_8)) // TODO
+                .verifyComplete();
+
+    }
+
+    /*
+     * This tests the ability to support custom JSON serialized pojos provided as part of the function artifact.
+     */
+    @Test
+    public void testCustomJsonPojos() throws Exception {
+        setFunctionLocation("custom-json-pojos-1.0.0-boot");
+        process = processBuilder.start();
+
+
+        Function<Flux<Map>, Flux<Map>> fn = FunctionClient.of(connect(), Map.class);
+        ((FunctionClient)fn).setMessageConverters(new MappingJackson2MessageConverter()); // Force usage of json
+
+        Flux<Map> response = fn.apply(Flux.just(person("John", "Smith"), person("Marcel", "Bébel")))
+                .map(HashMap::new); // Jackson returns LinkedHashMap
+        StepVerifier.create(response)
+                .expectNext(salary(4000, "USD"))
+                .expectNext(salary(6000, "EUR"))
+                .verifyComplete();
+
+    }
+
+    private Map<String, String> person(String firstName, String lastName) {
+        Map map = new HashMap();
+        map.put("firstName", firstName);
+        map.put("lastName", lastName);
+        return map;
+    }
+
+    private Map<String, String> salary(int amount, String currency) {
+        Map map = new HashMap();
+        map.put("amount", amount);
+        map.put("currency", currency);
+        return map;
     }
 
     /*

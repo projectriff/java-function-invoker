@@ -12,9 +12,9 @@ import java.util.function.Function;
 public class RepeaterApplication {
 
     @Bean
-    public Function<Tuple2<Flux<String>, Flux<Integer>>,
-            Tuple2<Flux<Double>, Flux<String>>
-            > fn() {
+    public Function<
+            Tuple2<Flux<String>, Flux<Integer>>,
+            Tuple2<Flux<Double>, Flux<String>>> fn() {
         return new MyFn();
     }
 
