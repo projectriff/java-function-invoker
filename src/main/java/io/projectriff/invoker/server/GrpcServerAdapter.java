@@ -99,7 +99,7 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
     private Function<Flux<Tuple2<Integer, Message<byte[]>>>, Flux<Tuple2<Integer, Message<byte[]>>>> invoker(Function<Object, Object> springCloudFunction) {
 
-        Type functionType = FunctionTypeUtils.getFunctionType(springCloudFunction, this.functionInspector);
+        Type functionType = FunctionTypeUtils.discoverFunctionTypeFromClass(springCloudFunction.getClass());
         int arity = FunctionTypeUtils.getInputCount(functionType);
 
         Tuple2<Integer, Message<byte[]>>[] startTuples = new Tuple2[arity];
