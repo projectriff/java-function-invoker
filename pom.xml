@@ -21,10 +21,10 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <grpc.version>1.23.0</grpc.version>
-        <reactive-grpc.version>0.10.0-RC1</reactive-grpc.version>
+        <reactive-grpc.version>1.0.0</reactive-grpc.version>
         <spring-cloud-function.version>3.0.0.BUILD-SNAPSHOT</spring-cloud-function.version>
-        <reactor.version>3.2.5.RELEASE</reactor.version>
-        <protoc.version>3.6.1</protoc.version>
+        <reactor.version>3.2.12.RELEASE</reactor.version>
+        <protoc.version>3.7.1</protoc.version>
     </properties>
 
     <dependencyManagement>
