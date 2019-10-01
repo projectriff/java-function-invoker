@@ -6,6 +6,8 @@ import io.projectriff.invoker.rpc.InputSignal;
 import io.projectriff.invoker.rpc.OutputFrame;
 import io.projectriff.invoker.rpc.OutputSignal;
 import io.projectriff.invoker.rpc.ReactorRiffGrpc;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
@@ -14,14 +16,18 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.MimeType;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
+import reactor.core.publisher.Operators;
 import reactor.core.publisher.Signal;
+import reactor.util.context.Context;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.lang.reflect.Type;
 import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 /**
@@ -113,6 +119,9 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
         return
                 // stick dummy messages in front to force the creation of each arg-index group
                 flux -> flux.startWith(startTuples)
+                        // Work around bug in reactive-grpc which freaks out on cancels happening after complete when
+                        // it shouldn't. Those cancels are a consequence of FluxGroupBy.complete()
+                        .transform(ignoreCancelsAfterComplete())
                         // group by arg index (ie de-mux)
                         .groupBy(Tuple2::getT1, Tuple2::getT2)
                         // chop the outer flux. We know there will ever be exactly that many groups
@@ -138,6 +147,52 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
                         })
                 ;
+    }
+
+    // Used to transform the publisher chain into one that doesn't forward cancel() calls once it has complete()d.
+    private Function<? super Publisher<Tuple2<Integer, Message<byte[]>>>, ? extends Publisher<Tuple2<Integer, Message<byte[]>>>> ignoreCancelsAfterComplete() {
+        return Operators.lift((f, actual) ->
+                new CoreSubscriber<Tuple2<Integer, Message<byte[]>>>() {
+                    private volatile boolean completed;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        actual.onSubscribe(new Subscription() {
+                            @Override
+                            public void request(long n) {
+                                s.request(n);
+                            }
+
+                            @Override
+                            public void cancel() {
+                                if (!completed) {
+                                    s.cancel();
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onNext(Tuple2<Integer, Message<byte[]>> objects) {
+                        actual.onNext(objects);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        actual.onError(t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        completed = true;
+                        actual.onComplete();
+                    }
+
+                    @Override
+                    public Context currentContext() {
+                        return actual.currentContext();
+                    }
+                });
     }
 
     private Flux<Message<byte[]>>[] promoteToArray(Object result) {
