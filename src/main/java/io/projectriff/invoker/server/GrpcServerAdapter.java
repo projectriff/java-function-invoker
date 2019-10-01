@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Operators;
 import reactor.core.publisher.Signal;
+import reactor.util.context.Context;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -151,8 +152,8 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     // Used to transform the publisher chain into one that doesn't forward cancel() calls once it has complete()d.
     private Function<? super Publisher<Tuple2<Integer, Message<byte[]>>>, ? extends Publisher<Tuple2<Integer, Message<byte[]>>>> ignoreCancelsAfterComplete() {
         return Operators.lift((f, actual) ->
-                new CoreSubscriber<>() {
-                    AtomicBoolean completed = new AtomicBoolean();
+                new CoreSubscriber<Tuple2<Integer, Message<byte[]>>>() {
+                    private volatile boolean completed;
 
                     @Override
                     public void onSubscribe(Subscription s) {
@@ -164,7 +165,7 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
                             @Override
                             public void cancel() {
-                                if (!completed.get()) {
+                                if (!completed) {
                                     s.cancel();
                                 }
                             }
@@ -183,8 +184,13 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
                     @Override
                     public void onComplete() {
-                        completed.compareAndSet(false, true);
+                        completed = true;
                         actual.onComplete();
+                    }
+
+                    @Override
+                    public Context currentContext() {
+                        return actual.currentContext();
                     }
                 });
     }
