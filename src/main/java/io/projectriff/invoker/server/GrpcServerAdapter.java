@@ -98,8 +98,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     }
 
     private Function<Flux<Tuple2<Integer, Message<byte[]>>>, Flux<Tuple2<Integer, Message<byte[]>>>> invoker(Function<Object, Object> springCloudFunction) {
-
-        Type functionType = FunctionTypeUtils.discoverFunctionTypeFromClass(springCloudFunction.getClass());
+        //Type functionType = FunctionTypeUtils.discoverFunctionTypeFromClass(springCloudFunction.getClass());
+        // TODO: functionInspector is going away but is currently the correct way to discover arity
+        // SCF@master is currently broken for some cases otherwise
+        Type functionType = this.functionInspector.getRegistration(springCloudFunction).getType().getType();
         int arity = FunctionTypeUtils.getInputCount(functionType);
 
         Tuple2<Integer, Message<byte[]>>[] startTuples = new Tuple2[arity];

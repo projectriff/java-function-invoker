@@ -97,7 +97,7 @@ If your function can't be automatically detected then you need to provide a hand
 The simplest form of the handler is a bean name or a class name that can be instantiated (with a default constructor).
 More complex creation scenarios can be handled by giving the handler via configuration properties:
 
-* `spring.cloud.function.function-location` the file path of a jar file containing the function class, Boot uber-jar or vanilla jar,
+* `spring.cloud.function.location` the file path of a jar file containing the function class, Boot uber-jar or vanilla jar,
 * `spring.cloud.function.function-class` is a class name,
 * `spring.cloud.function.definition` is a bean name,
 
