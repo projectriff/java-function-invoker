@@ -9,7 +9,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.FunctionProperties;
-import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 
@@ -40,10 +39,9 @@ public class EntryPoint {
     }
 
     @Bean
-    public GrpcServerAdapter adapter(FunctionCatalog functionCatalog, FunctionInspector functionInspector, FunctionProperties functionProperties) {
+    public GrpcServerAdapter adapter(FunctionCatalog functionCatalog, FunctionProperties functionProperties) {
         return new GrpcServerAdapter(
                 functionCatalog,
-                functionInspector,
                 functionProperties.getDefinition()
         );
     }

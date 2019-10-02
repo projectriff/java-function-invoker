@@ -9,7 +9,6 @@ import io.projectriff.invoker.rpc.ReactorRiffGrpc;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.cloud.function.context.FunctionCatalog;
-import org.springframework.cloud.function.context.catalog.FunctionInspector;
 import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -34,18 +33,16 @@ import java.util.function.Function;
  * Reactive gRPC adapter for riff.
  *
  * @author Eric Bottard
+ * @author Oleg Zhurakousky
  */
 public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
     private final FunctionCatalog functionCatalog;
 
-    private final FunctionInspector functionInspector;
-
     private final String functionName;
 
-    public GrpcServerAdapter(FunctionCatalog functionCatalog, FunctionInspector functionInspector, String functionName) {
+    public GrpcServerAdapter(FunctionCatalog functionCatalog, String functionName) {
         this.functionCatalog = functionCatalog;
-        this.functionInspector = functionInspector;
         this.functionName = functionName;
     }
 
@@ -104,10 +101,8 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     }
 
     private Function<Flux<Tuple2<Integer, Message<byte[]>>>, Flux<Tuple2<Integer, Message<byte[]>>>> invoker(Function<Object, Object> springCloudFunction) {
-        //Type functionType = FunctionTypeUtils.discoverFunctionTypeFromClass(springCloudFunction.getClass());
-        // TODO: functionInspector is going away but is currently the correct way to discover arity
-        // SCF@master is currently broken for some cases otherwise
-        Type functionType = this.functionInspector.getRegistration(springCloudFunction).getType().getType();
+        Type functionType = FunctionTypeUtils.discoverFunctionTypeFromFunctionalObject(springCloudFunction);
+
         int arity = FunctionTypeUtils.getInputCount(functionType);
 
         Tuple2<Integer, Message<byte[]>>[] startTuples = new Tuple2[arity];
