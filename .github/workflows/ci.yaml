@@ -1,0 +1,40 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '11.x'
+    - name: Build & Test
+      run: ./mvnw package verify
+
+  publish:
+    needs: test
+    if: |
+      github.event_name == 'push' && (
+        github.ref == 'refs/heads/master' || (
+          startsWith(github.ref, 'refs/heads/v') && endsWith(github.ref, 'x')
+        )
+      )
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '11.x'
+    - name: gcloud auth
+      run: |
+        gcloud config set disable_prompts True
+        gcloud auth activate-service-account --key-file <(echo $GCLOUD_CLIENT_SECRET | base64 --decode)
+      env:
+        GCLOUD_CLIENT_SECRET: ${{ secrets.GCLOUD_CLIENT_SECRET }}
+    - name: Package release
+      run: ./mvnw package
+    - name: Publish artifacts
+      run: .github/workflows/publish.sh
