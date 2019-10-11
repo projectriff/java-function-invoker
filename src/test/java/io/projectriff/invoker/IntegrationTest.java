@@ -5,8 +5,14 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.projectriff.invoker.client.FunctionClient;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestName;
+import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
@@ -16,10 +22,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.readAllLines;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for the invoker. Spins up an external java process pointing to several functions, similar to the
@@ -64,7 +77,7 @@ public class IntegrationTest {
 
     @Before
     public void prepareProcess() {
-        processBuilder = new ProcessBuilder(javaExecutable, "-jar", /*"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",*/ invokerJar);
+        processBuilder = new ProcessBuilder(javaExecutable, "-jar", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005", invokerJar);
         processBuilder.redirectOutput(new File(String.format("target%s%s.out", File.separator, testName.getMethodName())));
         processBuilder.redirectError(new File(String.format("target%s%s.err", File.separator, testName.getMethodName())));
         processBuilder.environment().clear();
@@ -204,6 +217,25 @@ public class IntegrationTest {
                 .expectNext("bb", "bb")
                 .expectNext("ccc", "ccc", "ccc")
                 .verifyComplete();
+
+    }
+
+    @Test
+    public void testConsumer() throws Exception {
+        Path hardcodedFile = new File(System.getProperty("java.io.tmpdir"), "let-me-sink.txt").toPath();
+        Files.deleteIfExists(hardcodedFile);
+        setFunctionLocation("file-sink-1.0.0-boot");
+        setFunctionClass("com.acme.HardcodedFileSink");
+        process = processBuilder.start();
+        Function<Flux<Integer>, Flux<Message<byte[]>>> fn = FunctionClient.of(connect());
+        
+        Flux<Message<byte[]>> outputs = fn.apply(Flux.just(1, 2, 3));
+
+        StepVerifier.create(outputs).verifyComplete();
+        assertThat(hardcodedFile)
+                .overridingErrorMessage("Consumer not invoked: temp file not created")
+                .exists()
+                .hasContent("1\n2\n3\n");
 
     }
 

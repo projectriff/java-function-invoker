@@ -3,7 +3,6 @@ package io.projectriff.invoker.server;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.projectriff.invoker.rpc.InputSignal;
 import io.projectriff.invoker.rpc.OutputFrame;
 import io.projectriff.invoker.rpc.OutputSignal;
@@ -28,7 +27,7 @@ import reactor.util.function.Tuples;
 
 import java.lang.reflect.Type;
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -62,6 +61,7 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                     if (userFn == null) {
                         return Flux.error(Status.NOT_FOUND.withDescription("Function could not be located").asException());
                     }
+
                     return stream
                             .skip(1L)
                             .map(this::toSpringMessage)
@@ -69,7 +69,8 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                             .map(this::fromSpringMessage)
                             .onErrorMap(e -> Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException())
                             .doOnError(Throwable::printStackTrace);
-                });
+                })
+                .log();
     }
 
     private String[] getExpectedOutputContentTypes(Signal<? extends InputSignal> first) {

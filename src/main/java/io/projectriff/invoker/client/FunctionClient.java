@@ -18,6 +18,7 @@ import reactor.core.publisher.Hooks;
 import reactor.util.function.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -30,7 +31,7 @@ import java.util.function.Function;
  * @param <O>  The output type of the function, typycally {@code Flux<R>} or {@code TupleM<Flux<R>, Flux<S>, ...>}
  * @author Eric Bottard
  */
-public class FunctionClient<I, O> implements Function<I, O> {
+public class FunctionClient<I, O> implements Function<I, O>, Consumer<I> {
 
     private final ReactorRiffGrpc.ReactorRiffStub riffStub;
 
@@ -45,6 +46,10 @@ public class FunctionClient<I, O> implements Function<I, O> {
         this.riffStub = ReactorRiffGrpc.newReactorStub(channel);
         this.outputTypes = outputTypes;
         setMessageConverters(new MappingJackson2MessageConverter());
+    }
+
+    public static <I, O1> FunctionClient<I, Flux<O1>> of(Channel channel) {
+        return new FunctionClient<>(channel);
     }
 
     public static <I, O1> FunctionClient<I, Flux<O1>> of(Channel channel, Class<O1> outputType) {
@@ -95,22 +100,9 @@ public class FunctionClient<I, O> implements Function<I, O> {
 
     @Override
     public O apply(I input) {
+        Flux<OutputSignal> response = invoke(input);
 
         int n = this.outputTypes.length;
-
-        InputSignal start = InputSignal.newBuilder()
-                .setStart(StartFrame.newBuilder()
-                        .addAllExpectedContentTypes(Collections.nCopies(n, this.supportedOutputTypes))
-                        .build())
-                .build();
-
-        Flux<InputSignal> allInputSignals = mergeWithArgIndices(input);
-
-        Flux<OutputSignal> response = riffStub.invoke(Flux.concat(
-                Flux.just(start),
-                allInputSignals
-        ));
-
         OutputSignal[] usedToForceGroups = new OutputSignal[n];
         for (int i = 0; i < n; i++) {
             usedToForceGroups[i] = OutputSignal.newBuilder()
@@ -129,7 +121,30 @@ public class FunctionClient<I, O> implements Function<I, O> {
                 .collectList()
                 .block()
                 .toArray(Flux[]::new);
+        if (fluxArray.length == 0) {
+            return (O) Flux.empty();
+        }
         return (O) ((fluxArray.length >= 2) ? Tuples.fromArray(fluxArray) : fluxArray[0]);
+    }
+
+    @Override
+    public void accept(I input) {
+        invoke(input).subscribe();
+    }
+
+    private Flux<OutputSignal> invoke(I input) {
+        InputSignal start = InputSignal.newBuilder()
+                .setStart(StartFrame.newBuilder()
+                        .addAllExpectedContentTypes(Collections.nCopies(this.outputTypes.length, this.supportedOutputTypes))
+                        .build())
+                .build();
+
+        Flux<InputSignal> allInputSignals = mergeWithArgIndices(input);
+
+        return riffStub.invoke(Flux.concat(
+                Flux.just(start),
+                allInputSignals
+        ));
     }
 
     private Flux<InputSignal> mergeWithArgIndices(I input) {
@@ -191,7 +206,7 @@ public class FunctionClient<I, O> implements Function<I, O> {
                 .setContentType(message.getHeaders().get(MessageHeaders.CONTENT_TYPE).toString())
                 .setPayload(ByteString.copyFrom((byte[]) message.getPayload()));
         message.getHeaders().forEach((h, v) -> frame.putHeaders(h, v.toString()));
-        
+
         return InputSignal.newBuilder()
                 .setData(frame.build())
                 .build();
