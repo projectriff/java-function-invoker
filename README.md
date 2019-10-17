@@ -18,9 +18,13 @@ the platform when functions are built and basic request/reply http support is ad
 You need to configure a Maven or Gradle project for your function.
 If you use Spring Boot then we recommend using [Spring Initializr](https://start.spring.io/) to bootstrap your project.
 If you are not using Spring Boot for your function code then you need to create your own build configuration.
-There are no required dependencies from the Java Function Invoker, it only requires that your function implements the `java.util.function.Function` interface.
 
 The [Spring Cloud Function](https://cloud.spring.io/spring-cloud-function/) project provides support for writing functions as part of a Spring Boot app.
+
+#### Request-reply functions
+
+The Java Function Invoker does not require any dependencies for simple request-reply functions. 
+It only requires that your function implements the `java.util.function.Function` interface.
 
 Example of a plain Java function:
 
@@ -61,6 +65,47 @@ public class UppercaseApplication {
 	}
 }
 ```
+
+#### Streaming functions
+
+If you want to author a streaming function, you will also need to pull Reactor Core (`io.projectreactor:reactor-core`) as the invoker leverages Reactor's `Flux` API to work with streams.
+
+```java
+package functions;
+
+import reactor.core.publisher.Flux;
+
+import java.util.function.Function;
+
+public class Upper implements Function<Flux<String>, Flux<String>> {
+
+    public String apply(Flux<String> names) {
+        return names.map(String::length);
+    }
+}
+```
+
+If the function accepts several inputs and/or outputs, you can use the `Tuple` API of Reactor core. In the following example, the function accepts 2 input streams and 3 output streams:
+
+```java
+package io.projectriff.invoker.server;
+
+import reactor.core.publisher.Flux;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+
+import java.util.function.Function;
+
+public class MultiInputOutputFunction implements Function<Tuple2<Flux<String>, Flux<Integer>>, 
+                                                          Tuple3<Flux<String>, Flux<Boolean>, Flux<Integer>>> {
+    
+    @Override
+    public Tuple3<Flux<String>, Flux<Boolean>, Flux<Integer>> apply(Tuple2<Flux<String>, Flux<Integer>> objects) {
+        // [...]
+    }
+}
+```
+
 
 #### Function detection
 
