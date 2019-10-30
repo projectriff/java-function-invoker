@@ -2,6 +2,8 @@ package io.projectriff.invoker.server;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.grpc.Status;
+import io.grpc.StatusException;
 import io.projectriff.invoker.rpc.InputSignal;
 import io.projectriff.invoker.rpc.OutputFrame;
 import io.projectriff.invoker.rpc.OutputSignal;
@@ -51,18 +53,21 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
         return request
                 .switchOnFirst((first, stream) -> {
                     if (!first.hasValue() || !first.get().hasStart()) {
-                        return Flux.error(new RuntimeException("Expected first frame to be of type Start"));
+                        return Flux.error(Status.INVALID_ARGUMENT.withDescription("Expected first frame to be of type Start").asException());
                     }
 
                     String[] accept = getExpectedOutputContentTypes(first);
 
                     Function<Object, Object> userFn = functionCatalog.lookup(functionName, accept);
-
+                    if (userFn == null) {
+                        return Flux.error(Status.NOT_FOUND.withDescription("Function could not be located").asException());
+                    }
                     return stream
                             .skip(1L)
                             .map(this::toSpringMessage)
                             .transform(invoker(userFn))
                             .map(this::fromSpringMessage)
+                            .onErrorMap(e -> Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException())
                             .doOnError(Throwable::printStackTrace);
                 });
     }
