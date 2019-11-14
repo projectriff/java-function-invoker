@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-version=${1:-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout | tail -n1)}
+version=${1:-$(./mvnw -B help:evaluate -Dexpression=project.version -q -DforceStdout | tail -n1)}
 commit=$(git rev-parse HEAD)
 
 package=java-function-invoker-${version}.jar

@@ -17,7 +17,7 @@ jobs:
       with:
         java-version: '11.x'
     - name: Build & Test
-      run: ./mvnw package verify
+      run: ./mvnw -B package verify
 
   publish:
     needs: test
@@ -40,6 +40,6 @@ jobs:
       env:
         GCLOUD_CLIENT_SECRET: ${{ secrets.GCLOUD_CLIENT_SECRET }}
     - name: Package release
-      run: ./mvnw package
+      run: ./mvnw -B package
     - name: Publish artifacts
       run: .github/workflows/publish.sh
