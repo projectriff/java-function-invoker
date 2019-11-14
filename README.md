@@ -150,8 +150,8 @@ More complex creation scenarios can be handled by giving the handler via configu
 #### Function samples
 
 We have sample application for 
-[plain Java function](src/test/function-sources/hundred-divider) 
-and for [Spring Boot app with a function bean](src/test/function-sources/repeater-as-bean).
+[plain Java function](src/test/functions-sources/hundred-divider) 
+and for [Spring Boot app with a function bean](src/test/functions-sources/repeater-as-bean).
 
 ### Cloud Native Buildpacks
 
