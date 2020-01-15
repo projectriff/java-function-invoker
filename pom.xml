@@ -74,7 +74,7 @@
             <groupId>io.projectreactor.addons</groupId>
             <artifactId>reactor-extra</artifactId>
             <version>${reactor.version}</version>
-            <scope>runtime</scope><!-- Not needed per-se, but made available in case functions use it (and we want out CL to load it)-->
+            <scope>runtime</scope><!-- Not needed per-se, but made available in case functions use it (and we want our CL to load it)-->
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
