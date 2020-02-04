@@ -11,9 +11,11 @@ import io.projectriff.invoker.rpc.ReactorRiffGrpc;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.function.context.catalog.BeanFactoryAwareFunctionRegistry;
 import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.MimeType;
@@ -67,9 +69,18 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                             .map(this::toSpringMessage)
                             .transform(invoker(userFn))
                             .map(this::fromSpringMessage)
-                            .onErrorMap(e -> Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException())
+                            .onErrorMap(this::handleConversionExceptions)
                             .doOnError(Throwable::printStackTrace);
                 });
+    }
+
+    private StatusException handleConversionExceptions(Throwable e) {
+        if (e instanceof MessageConversionException && e.getMessage().equals(BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_INPUT)) {
+            return Status.INVALID_ARGUMENT.withDescription("Invoker: Unsupported Media Type: " + e.getMessage()).withCause(e).asException();
+        } else if (e instanceof MessageConversionException && e.getMessage().equals(BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_OUTPUT)) {
+            return Status.INVALID_ARGUMENT.withDescription("Invoker: Not Acceptable: " + e.getMessage()).withCause(e).asException();
+        }
+        return Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException();
     }
 
     private String[] getExpectedOutputContentTypes(Signal<? extends InputSignal> first) {
