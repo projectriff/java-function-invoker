@@ -11,9 +11,11 @@ import io.projectriff.invoker.rpc.ReactorRiffGrpc;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.function.context.catalog.BeanFactoryAwareFunctionRegistry;
 import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.MimeType;
@@ -38,6 +40,16 @@ import java.util.function.Function;
  * @author Oleg Zhurakousky
  */
 public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
+
+    /**
+     * The prefix used in gRPC errors to identify unsupported incoming media types, as defined by the invoker spec.
+     */
+    public static final String INVOKER_UNSUPPORTED_MEDIA_TYPE = "Invoker: Unsupported Media Type: ";
+
+    /**
+     * The prefix used in gRPC errors to identify not acceptable media types, as defined by the invoker spec.
+     */
+    public static final String INVOKER_NOT_ACCEPTABLE = "Invoker: Not Acceptable: ";
 
     private final FunctionCatalog functionCatalog;
 
@@ -67,9 +79,18 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                             .map(this::toSpringMessage)
                             .transform(invoker(userFn))
                             .map(this::fromSpringMessage)
-                            .onErrorMap(e -> Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException())
+                            .onErrorMap(this::handleConversionExceptions)
                             .doOnError(Throwable::printStackTrace);
                 });
+    }
+
+    private StatusException handleConversionExceptions(Throwable e) {
+        if (e instanceof MessageConversionException && BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_INPUT.equals(e.getMessage())) {
+            return Status.INVALID_ARGUMENT.withDescription(INVOKER_UNSUPPORTED_MEDIA_TYPE + e.getMessage()).withCause(e).asException();
+        } else if (e instanceof MessageConversionException && BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_OUTPUT.equals(e.getMessage())) {
+            return Status.INVALID_ARGUMENT.withDescription(INVOKER_NOT_ACCEPTABLE + e.getMessage()).withCause(e).asException();
+        }
+        return Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException();
     }
 
     private String[] getExpectedOutputContentTypes(Signal<? extends InputSignal> first) {
