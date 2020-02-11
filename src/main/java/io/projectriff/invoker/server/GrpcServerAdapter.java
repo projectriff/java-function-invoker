@@ -41,6 +41,16 @@ import java.util.function.Function;
  */
 public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
 
+    /**
+     * The prefix used in gRPC errors to identify unsupported incoming media types, as defined by the invoker spec.
+     */
+    public static final String INVOKER_UNSUPPORTED_MEDIA_TYPE = "Invoker: Unsupported Media Type: ";
+
+    /**
+     * The prefix used in gRPC errors to identify not acceptable media types, as defined by the invoker spec.
+     */
+    public static final String INVOKER_NOT_ACCEPTABLE = "Invoker: Not Acceptable: ";
+
     private final FunctionCatalog functionCatalog;
 
     private final String functionName;
@@ -75,10 +85,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     }
 
     private StatusException handleConversionExceptions(Throwable e) {
-        if (e instanceof MessageConversionException && e.getMessage().equals(BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_INPUT)) {
-            return Status.INVALID_ARGUMENT.withDescription("Invoker: Unsupported Media Type: " + e.getMessage()).withCause(e).asException();
-        } else if (e instanceof MessageConversionException && e.getMessage().equals(BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_OUTPUT)) {
-            return Status.INVALID_ARGUMENT.withDescription("Invoker: Not Acceptable: " + e.getMessage()).withCause(e).asException();
+        if (e instanceof MessageConversionException && BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_INPUT.equals(e.getMessage())) {
+            return Status.INVALID_ARGUMENT.withDescription(INVOKER_UNSUPPORTED_MEDIA_TYPE + e.getMessage()).withCause(e).asException();
+        } else if (e instanceof MessageConversionException && BeanFactoryAwareFunctionRegistry.COULD_NOT_CONVERT_OUTPUT.equals(e.getMessage())) {
+            return Status.INVALID_ARGUMENT.withDescription(INVOKER_NOT_ACCEPTABLE + e.getMessage()).withCause(e).asException();
         }
         return Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asException();
     }
