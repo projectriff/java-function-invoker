@@ -100,6 +100,9 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
     }
 
     private Tuple2<Integer, Message<byte[]>> toSpringMessage(InputSignal in) {
+        if (!in.hasData()) {
+            throw new RuntimeException("Expected DataFrame, got " + in.getFrameCase());
+        }
         int argIndex = in.getData().getArgIndex();
         String contentType = in.getData().getContentType();
         Message<byte[]> message = MessageBuilder
