@@ -1,9 +1,12 @@
 package io.projectriff.invoker.main;
 
+import java.io.IOException;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.projectriff.invoker.rpc.StartFrame;
 import io.projectriff.invoker.server.GrpcServerAdapter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,8 +14,6 @@ import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.FunctionProperties;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
-
-import java.io.IOException;
 
 /**
  * This is the main entry point for the java function invoker.
@@ -75,5 +76,4 @@ public class EntryPoint {
             }
         };
     }
-
 }

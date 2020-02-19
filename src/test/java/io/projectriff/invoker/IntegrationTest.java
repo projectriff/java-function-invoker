@@ -8,7 +8,9 @@ import io.grpc.StatusRuntimeException;
 import io.projectriff.invoker.client.FunctionClient;
 import org.junit.*;
 import org.junit.rules.TestName;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
@@ -21,7 +23,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +71,7 @@ public class IntegrationTest {
 
     @Before
     public void prepareProcess() {
-        processBuilder = new ProcessBuilder(javaExecutable, "-jar", /*"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",*/ invokerJar);
+        processBuilder = new ProcessBuilder(javaExecutable, "-jar"/*, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"*/, invokerJar);
         processBuilder.redirectOutput(new File(String.format("target%s%s.out", File.separator, testName.getMethodName())));
         processBuilder.redirectError(new File(String.format("target%s%s.err", File.separator, testName.getMethodName())));
         processBuilder.environment().clear();
@@ -181,6 +182,27 @@ public class IntegrationTest {
         Flux<Integer> response = fn.apply(Flux.just(1, 2, 4));
         StepVerifier.create(response)
                 .expectNext(100, 50, 25)
+                .verifyComplete();
+
+    }
+
+    /*
+     * Tests that functions can accept/return spring Messages.
+     */
+    @Test
+    public void testMessagesAsArgument() throws Exception {
+        setFunctionLocation("message-as-argument-1.0.0");
+        setFunctionClass("com.acme.MessageFunction");
+        process = processBuilder.start();
+
+
+        FunctionClient<Flux<String>, Flux<Integer>> fn = FunctionClient.of(connect(), Integer.class);
+
+        Flux<Integer> response = fn.apply(
+                Flux.just("hello")
+        );
+        StepVerifier.create(response)
+                .expectNext(5)
                 .verifyComplete();
 
     }
