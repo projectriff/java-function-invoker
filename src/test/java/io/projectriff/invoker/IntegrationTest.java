@@ -1,12 +1,21 @@
 package io.projectriff.invoker;
 
-import com.acme.*;
+import com.acme.CustomInput;
+import com.acme.CustomInputConverter;
+import com.acme.CustomOutput;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.projectriff.invoker.client.ConsumerClient;
 import io.projectriff.invoker.client.FunctionClient;
-import org.junit.*;
+import io.projectriff.invoker.client.SupplierClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestName;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import reactor.core.publisher.Flux;
@@ -21,11 +30,14 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for the invoker. Spins up an external java process pointing to several functions, similar to the
@@ -196,7 +208,7 @@ public class IntegrationTest {
 
 
         Function<Flux<CustomInput>, Flux<CustomOutput>> fn = FunctionClient.of(connect(), CustomOutput.class);
-        ((FunctionClient)fn).setMessageConverters(new CustomInputConverter());
+        ((FunctionClient) fn).setMessageConverters(new CustomInputConverter());
 
         Flux<CustomOutput> response = fn.apply(Flux.just(new CustomInput("hello".getBytes(StandardCharsets.UTF_8))));
         StepVerifier.create(response)
@@ -215,7 +227,7 @@ public class IntegrationTest {
 
 
         Function<Flux<Map>, Flux<Map>> fn = FunctionClient.of(connect(), Map.class);
-        ((FunctionClient)fn).setMessageConverters(new MappingJackson2MessageConverter()); // Force usage of json
+        ((FunctionClient) fn).setMessageConverters(new MappingJackson2MessageConverter()); // Force usage of json
 
         Flux<Map> response = fn.apply(Flux.just(person("John", "Smith"), person("Marcel", "Bébel")))
                 .map(HashMap::new); // Jackson returns LinkedHashMap
@@ -309,6 +321,106 @@ public class IntegrationTest {
                 .expectNext(100, 50)
                 .verifyErrorMatches(t -> (t instanceof StatusRuntimeException) && ((StatusRuntimeException) t).getStatus().getCode() == Status.Code.UNKNOWN);
 
+    }
+
+    @Test
+    //FIXME SCF does not promote Supplier<T> to Supplier<Flux<T>>?
+    public void testSupplier() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TruthSupplier");
+        process = processBuilder.start();
+
+        Supplier<Flux<Integer>> supplier = SupplierClient.of(connect(), Integer.class);
+
+        StepVerifier.create(supplier.get())
+                .expectNext(42)
+                .verifyComplete();
+    }
+
+    @Test
+    public void testStreamingSupplier() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TruthStreamingSupplier");
+        process = processBuilder.start();
+
+        Supplier<Flux<Integer>> supplier = SupplierClient.of(connect(), Integer.class);
+
+        StepVerifier.create(supplier.get())
+                .expectNext(42)
+                .expectNext(41)
+                .expectNext(43)
+                .verifyComplete();
+    }
+
+    @Test
+    public void testTupledStreamingSupplier() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TupledTruthStreamingSupplier");
+        process = processBuilder.start();
+
+        Supplier<Tuple2<Flux<Integer>, Flux<Boolean>>> supplier = SupplierClient.of(connect(), Integer.class, Boolean.class);
+
+        Tuple2<Flux<Integer>, Flux<Boolean>> resultTuple = supplier.get();
+        StepVerifier.create(resultTuple.getT1())
+                .expectNext(42)
+                .expectNext(2)
+                .expectNext(42)
+                .verifyComplete();
+        StepVerifier.create(resultTuple.getT2())
+                .expectNext(true)
+                .expectNext(false)
+                .expectNext(true)
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    public void testConsumer() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TruthConsumer");
+        process = processBuilder.start();
+
+        Consumer<Flux<Integer>> consumer = ConsumerClient.of(connect());
+
+        consumer.accept(Flux.just(42, 41, 43));
+        Thread.sleep(1500);
+        File file = new File(System.getProperty("java.io.tmpdir"), "TruthConsumer");
+        assertThat(file).hasContent("42\n41\n43\n");
+    }
+
+    @Test
+    //FIXME first value not written - switchOnFirst??
+    public void testStreamingConsumer() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TruthStreamingConsumer");
+        process = processBuilder.start();
+
+        Consumer<Flux<Integer>> consumer = ConsumerClient.of(connect());
+
+        consumer.accept(Flux.just(42, 41, 43));
+        Thread.sleep(3000);
+        File file = new File(System.getProperty("java.io.tmpdir"), "TruthStreamingConsumer");
+        assertThat(file).hasContent("42\n41\n43\n");
+    }
+
+    @Test
+    //FIXME
+    public void testTupledStreamingConsumer() throws Exception {
+        setFunctionLocation("consumer-supplier-1.0.0");
+        setFunctionClass("com.acme.TupledTruthStreamingConsumer");
+        process = processBuilder.start();
+
+        Consumer<Tuple2<Flux<Integer>, Flux<Boolean>>> consumer = ConsumerClient.of(connect());
+
+        consumer.accept(Tuples.of(
+                Flux.just(42, 41, 43),
+                Flux.just(true, false, true, true)
+        ));
+        Thread.sleep(3000);
+        assertThat(new File(System.getProperty("java.io.tmpdir"), "TupledTruthStreamingConsumer1"))
+                .hasContent("42\n41\n43\n");
+        assertThat(new File(System.getProperty("java.io.tmpdir"), "TupledTruthStreamingConsumer2"))
+                .hasContent("true\nfalse\ntrue\ntrue\n");
     }
 
     /**
