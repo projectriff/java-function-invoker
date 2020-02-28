@@ -30,7 +30,6 @@ import reactor.util.function.Tuples;
 
 import java.lang.reflect.Type;
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 /**
@@ -159,12 +158,12 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                             // apply the function
                             Object result = springCloudFunction.apply(tuple);
 
-                            Flux<Message<byte[]>>[] bareOutputs = promoteToArray(result);
+                            Publisher<Message<byte[]>>[] bareOutputs = promoteToArray(result);
                             // finally, merge all fluxes as Tuple2s with the output index set
-                            Flux<Tuple2<Integer, Message<byte[]>>>[] withOutputIndices = new Flux[bareOutputs.length];
+                            Publisher<Tuple2<Integer, Message<byte[]>>>[] withOutputIndices = new Publisher[bareOutputs.length];
                             for (int i = 0; i < bareOutputs.length; i++) {
                                 int j = i;
-                                withOutputIndices[i] = bareOutputs[i].map(msg -> Tuples.of(j, msg));
+                                withOutputIndices[i] = Flux.from(bareOutputs[i]).map(msg -> Tuples.of(j, msg));
                             }
                             return Flux.merge(withOutputIndices);
 
@@ -218,17 +217,17 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                 });
     }
 
-    private Flux<Message<byte[]>>[] promoteToArray(Object result) {
+    private Publisher<Message<byte[]>>[] promoteToArray(Object result) {
         if (result instanceof Tuple2) {
             Object[] objects = ((Tuple2) result).toArray();
-            Flux<Message<byte[]>>[] fluxArray = new Flux[objects.length];
+            Publisher<Message<byte[]>>[] fluxArray = new Publisher[objects.length];
             for (int i = 0; i < objects.length; i++) {
-                fluxArray[i] = (Flux<Message<byte[]>>) objects[i];
+                fluxArray[i] = (Publisher<Message<byte[]>>) objects[i];
             }
             return fluxArray;
         } else {
-            Flux<Message<byte[]>> item = (Flux<Message<byte[]>>) result;
-            return new Flux[]{item};
+            Publisher<Message<byte[]>> item = (Publisher<Message<byte[]>>) result;
+            return new Publisher[]{item};
         }
     }
 
