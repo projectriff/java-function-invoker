@@ -22,6 +22,7 @@ import org.springframework.util.MimeType;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.core.publisher.Signal;
 import reactor.util.context.Context;
@@ -225,9 +226,11 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
                 fluxArray[i] = (Publisher<Message<byte[]>>) objects[i];
             }
             return fluxArray;
-        } else {
+        } else if (result instanceof Publisher) {
             Publisher<Message<byte[]>> item = (Publisher<Message<byte[]>>) result;
             return new Publisher[]{item};
+        } else {
+            return new Publisher[]{Mono.just(result)};
         }
     }
 

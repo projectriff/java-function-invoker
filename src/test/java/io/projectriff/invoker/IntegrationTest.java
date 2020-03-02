@@ -324,8 +324,6 @@ public class IntegrationTest {
     }
 
     @Test
-    @Ignore
-    //FIXME SCF does not promote Supplier<T> to Supplier<Flux<T>>?
     public void testSupplier() throws Exception {
         setFunctionLocation("consumer-supplier-1.0.0");
         setFunctionClass("com.acme.TruthSupplier");
