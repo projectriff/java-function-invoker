@@ -229,8 +229,10 @@ public class GrpcServerAdapter extends ReactorRiffGrpc.RiffImplBase {
         } else if (result instanceof Publisher) {
             Publisher<Message<byte[]>> item = (Publisher<Message<byte[]>>) result;
             return new Publisher[]{item};
-        } else {
+        } else if (result != null) {
             return new Publisher[]{Mono.just(result)};
+        } else {
+            return new Publisher[0];
         }
     }
 
