@@ -388,8 +388,6 @@ public class IntegrationTest {
     }
 
     @Test
-    @Ignore
-    //FIXME first value not written - switchOnFirst??
     public void testStreamingConsumer() throws Exception {
         setFunctionLocation("consumer-supplier-1.0.0");
         setFunctionClass("com.acme.TruthStreamingConsumer");
@@ -404,8 +402,6 @@ public class IntegrationTest {
     }
 
     @Test
-    @Ignore
-    //FIXME
     public void testTupledStreamingConsumer() throws Exception {
         setFunctionLocation("consumer-supplier-1.0.0");
         setFunctionClass("com.acme.TupledTruthStreamingConsumer");
