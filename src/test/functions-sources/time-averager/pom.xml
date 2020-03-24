@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>io.projectreactor.addons</groupId>
 			<artifactId>reactor-extra</artifactId>
-			<version>3.3.2.RELEASE</version>
+			<version>3.3.3.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor</groupId>
