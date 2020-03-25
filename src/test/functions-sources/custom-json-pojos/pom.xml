@@ -2,32 +2,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.projectriff.sample</groupId>
-    <artifactId>custom-json-pojos</artifactId>
-    <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <parent>
+        <groupId>io.projectriff.sample</groupId>
+        <artifactId>functions</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
+    <artifactId>custom-json-pojos</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>2.2.5.RELEASE</version>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>2.10.0</version>
-            <scope>provided</scope>
-        </dependency>
-        -->
     </dependencies>
 
     <build>
@@ -35,7 +22,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.2.5.RELEASE</version>
                 <executions>
                     <execution>
                         <goals>

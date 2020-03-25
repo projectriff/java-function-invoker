@@ -1,44 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.projectriff.sample</groupId>
-	<artifactId>time-averager</artifactId>
-	<version>1.0.0</version>
-	<packaging>jar</packaging>
+	<parent>
+		<groupId>io.projectriff.sample</groupId>
+		<artifactId>functions</artifactId>
+		<version>1.0.0</version>
+	</parent>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-	</properties>
+	<artifactId>time-averager</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<version>2.2.5.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
-			<version>3.3.4.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor.addons</groupId>
 			<artifactId>reactor-extra</artifactId>
-			<version>3.3.3.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
-			<version>3.3.4.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -48,7 +39,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>2.2.5.RELEASE</version>
 				<executions>
 					<execution>
 						<goals>
