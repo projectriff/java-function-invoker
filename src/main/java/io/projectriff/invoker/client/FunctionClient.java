@@ -26,8 +26,8 @@ import java.util.function.Function;
  * <p>It performs client-side serialization/deserializaton and mux/demux of parameters and return values.</p>
  * <p>By default, only a converter for {@code application/json} is set up, but users can override this via {@link #setMessageConverters(AbstractMessageConverter...)}.</p>
  *
- * @param <I> The input type of the function, typycally {@code Flux<T>} or {@code TupleN<Flux<T>, Flux<U>, ...>}
- * @param <O>  The output type of the function, typycally {@code Flux<R>} or {@code TupleM<Flux<R>, Flux<S>, ...>}
+ * @param <I> The input type of the function, typically {@code Flux<T>} or {@code TupleN<Flux<T>, Flux<U>, ...>}
+ * @param <O> The output type of the function, typically {@code Flux<R>} or {@code TupleM<Flux<R>, Flux<S>, ...>}
  * @author Eric Bottard
  */
 public class FunctionClient<I, O> implements Function<I, O> {
